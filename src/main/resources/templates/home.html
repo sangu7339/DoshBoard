@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Status</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #444;
+        }
+
+        a button {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 15px 0;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        a button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin: 20px 0;
+        }
+
+        table thead {
+            background-color: #007bff;
+            color: white;
+        }
+
+        table th, table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        table td a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        table td a:hover {
+            text-decoration: underline;
+        }
+
+        /* Chart container */
+        #statusChart {
+            display: block;
+            margin: 20px auto;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Live Status</h1>
+
+<div style="text-align: center;">
+    <a href="/add">
+        <button>Add Status</button>
+    </a>
+</div>
+
+<h2>Table View</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Project</th>
+            <th>New User</th>
+            <th>Partner</th>
+            <th>Admin</th>
+            <th>Sales</th>
+            <th>Bug #</th>
+            <th>Issue</th>
+            <th>Severity</th>
+            <th>Priority</th>
+            <th>In Dev</th>
+            <th>In QA</th>
+            <th>Reopen</th>
+            <th>Verify & Closed</th>
+            <th>Remarks</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="status : ${statuses}">
+            <td th:text="${status.id}"></td>
+            <td th:text="${status.project}"></td>
+            <td th:text="${status.newUser}"></td>
+            <td th:text="${status.partner}"></td>
+            <td th:text="${status.admin}"></td>
+            <td th:text="${status.sales}"></td>
+            <td th:text="${status.bugNumber}"></td>
+            <td th:text="${status.issue}"></td>
+            <td th:text="${status.severity}"></td>
+            <td th:text="${status.priority}"></td>
+            <td th:text="${status.inDev}"></td>
+            <td th:text="${status.inQA}"></td>
+            <td th:text="${status.reopen}"></td>
+            <td th:text="${status.verifyAndClosed}"></td>
+            <td th:text="${status.remarks}"></td>
+            <td>
+                <a th:href="@{'/edit/' + ${status.id}}">Edit</a> |
+                <a th:href="@{'/delete/' + ${status.id}}" onclick="return confirm('Delete this record?')">Delete</a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Pie Chart View</h2>
+<canvas id="statusChart" width="400" height="400"></canvas>
+<script>
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['New User', 'Partner', 'Admin', 'Sales'],
+            datasets: [{
+                data: [
+                    [[${newUserPercent}]],
+                    [[${partnerPercent}]],
+                    [[${adminPercent}]],
+                    [[${salesPercent}]]
+                ],
+                backgroundColor: ['#ff9800', '#2196f3', '#4caf50', '#f44336']
+            }]
+        },
+        options: {
+            plugins: {
+                datalabels: {
+                    color: '#fff',
+                    formatter: (value) => value.toFixed(1) + '%',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+</script>
+
+</body>
+</html>

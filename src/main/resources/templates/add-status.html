@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Add / Update Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        form {
+            max-width: 600px;
+            background: #fff;
+            margin: 30px auto;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 15px;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin-top: 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button[type="submit"] {
+            background-color: #007bff;
+            color: white;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        button[type="button"] {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        button[type="button"]:hover {
+            background-color: #5a6268;
+        }
+
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<h1 th:text="${status.id} != null ? 'Update Status' : 'Add Status'"></h1>
+
+<form th:action="@{/add}" th:object="${status}" method="post">
+    <input type="hidden" th:field="*{id}"/>
+
+    <label>Project:</label>
+    <input type="text" th:field="*{project}" required/>
+
+    <label>New User:</label>
+    <select th:field="*{newUser}">
+        <option value="Applicable">Applicable</option>
+        <option value="Not Applicable">Not Applicable</option>
+    </select>
+
+    <label>Partner:</label>
+    <select th:field="*{partner}">
+        <option value="Applicable">Applicable</option>
+        <option value="Not Applicable">Not Applicable</option>
+    </select>
+
+    <label>Admin:</label>
+    <select th:field="*{admin}">
+        <option value="Applicable">Applicable</option>
+        <option value="Not Applicable">Not Applicable</option>
+    </select>
+
+    <label>Sales:</label>
+    <select th:field="*{sales}">
+        <option value="Applicable">Applicable</option>
+        <option value="Not Applicable">Not Applicable</option>
+    </select>
+
+    <label>Bug Number:</label>
+    <input type="number" th:field="*{bugNumber}" required/>
+
+    <label>Issue:</label>
+    <input type="text" th:field="*{issue}" required/>
+
+    <label>Severity:</label>
+    <select th:field="*{severity}">
+        <option value="S1">S1</option>
+        <option value="S2">S2</option>
+        <option value="S3">S3</option>
+    </select>
+
+    <label>Priority:</label>
+    <select th:field="*{priority}">
+        <option value="P1">P1</option>
+        <option value="P2">P2</option>
+        <option value="P3">P3</option>
+    </select>
+
+    <label>In Dev:</label>
+    <select th:field="*{inDev}">
+        <option value="Fixed">Fixed</option>
+        <option value="Not Fixed">Not Fixed</option>
+    </select>
+
+    <label>In QA:</label>
+    <select th:field="*{inQA}">
+        <option value="Open">Open</option>
+        <option value="Pass">Pass</option>
+        <option value="Fail">Fail</option>
+    </select>
+
+    <label>Reopen:</label>
+    <select th:field="*{reopen}">
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+    </select>
+
+    <label>Verify & Closed:</label>
+    <select th:field="*{verifyAndClosed}">
+        <option value="Pass">Pass</option>
+        <option value="Fail">Fail</option>
+        <option value="Pending">Pending</option>
+    </select>
+
+    <label>Remarks:</label>
+    <textarea th:field="*{remarks}"></textarea>
+
+    <button type="submit">Save</button>
+    <a href="/"><button type="button">Cancel</button></a>
+</form>
+
+</body>
+</html>

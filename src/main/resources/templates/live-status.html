@@ -1,0 +1,38 @@
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Project</th>
+    <th>New User</th>
+    <th>Partner</th>
+    <th>Admin</th>
+    <th>Sales</th>
+    <th>Bug #</th>
+    <th>Issue</th>
+    <th>Severity</th>
+    <th>Priority</th>
+    <th>In Dev</th>
+    <th>In QA</th>
+    <th>Reopen</th>
+    <th>Verify & Closed</th>
+    <th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="status : ${statuses}">
+    <td th:text="${status.id}"></td>
+    <td th:text="${status.project}"></td>
+    <td th:text="${status.newUser}"></td>
+    <td th:text="${status.partner}"></td>
+    <td th:text="${status.admin}"></td>
+    <td th:text="${status.sales}"></td>
+    <td th:text="${status.bugNumber}"></td>
+    <td th:text="${status.issue}"></td>
+    <td th:text="${status.severity}"></td>
+    <td th:text="${status.priority}"></td>
+    <td th:text="${status.inDev}"></td>
+    <td th:text="${status.inQA}"></td>
+    <td th:text="${status.reopen}"></td>
+    <td th:text="${status.verifyAndClosed}"></td>
+    <td th:text="${status.remarks}"></td>
+</tr>
+</tbody>
