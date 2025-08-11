@@ -338,6 +338,78 @@
             border-radius: 15px;
         }
 
+        /* Live Status Notifications */
+        .live-indicator {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: linear-gradient(45deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-info {
+            background: linear-gradient(45deg, #d1ecf1, #bee5eb);
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            z-index: 1000;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .notification-info {
+            background: linear-gradient(45deg, #17a2b8, #138496);
+            color: white;
+        }
+
+        .notification-content {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-content button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 15px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -561,44 +633,44 @@
 
                             <!-- QA Items -->
                             <tr th:each="item : ${qaItems}" th:if="${qaItems != null}">
-                                <td th:text="${item.id}">2</td>
-                                <td th:text="${item.project}">Project Name</td>
-                                <td th:text="${item.bugNumber}">BUG002</td>
-                                <td th:text="${item.issue}">Issue Description</td>
+                                <td th:text="${item.id}"></td>
+                                <td th:text="${item.project}"></td>
+                                <td th:text="${item.bugNumber}"></td>
+                                <td th:text="${item.issue}"></td>
                                 <td>
                                     <span class="table-badge" th:text="${item.severity}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}">S2</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.priority}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}">P2</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}"></span>
                                 </td>
-                                <td th:text="${item.newUser}">Applicable</td>
-                                <td th:text="${item.partner}">Applicable</td>
-                                <td th:text="${item.admin}">Applicable</td>
-                                <td th:text="${item.sales}">Applicable</td>
-                                <td th:text="${item.status}">In QA</td>
+                                <td th:text="${item.newUser}"></td>
+                                <td th:text="${item.partner}"></td>
+                                <td th:text="${item.admin}"></td>
+                                <td th:text="${item.sales}"></td>
+                                <td th:text="${item.status}"></td>
                                 <td>
                                     <span class="table-badge" th:text="${item.live} ? 'Live' : 'Previous'" 
-                                          th:class="${item.live} ? 'table-badge badge-live' : 'table-badge badge-previous'">Live</span>
+                                          th:class="${item.live} ? 'table-badge badge-live' : 'table-badge badge-previous'"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.inDev}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}">Pass</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.inQA}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}">Open</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.reopen}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}">No</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.verifyAndClosed}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}">Pending</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}"></span>
                                 </td>
-                                <td th:text="${item.remarks}">Remarks</td>
+                                <td th:text="${item.remarks}"></td>
                                 <td>
                                     <div class="action-buttons-table">
                                         <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">✏️ Edit</a>
@@ -610,43 +682,43 @@
 
                             <!-- Live Items -->
                             <tr th:each="item : ${liveItems}" th:if="${liveItems != null}">
-                                <td th:text="${item.id}">3</td>
-                                <td th:text="${item.project}">Project Name</td>
-                                <td th:text="${item.bugNumber}">BUG003</td>
-                                <td th:text="${item.issue}">Issue Description</td>
+                                <td th:text="${item.id}"></td>
+                                <td th:text="${item.project}"></td>
+                                <td th:text="${item.bugNumber}"></td>
+                                <td th:text="${item.issue}"></td>
                                 <td>
                                     <span class="table-badge" th:text="${item.severity}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}">S1</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.priority}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}">P1</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}"></span>
                                 </td>
-                                <td th:text="${item.newUser}">Applicable</td>
-                                <td th:text="${item.partner}">Applicable</td>
-                                <td th:text="${item.admin}">Applicable</td>
-                                <td th:text="${item.sales}">Applicable</td>
-                                <td th:text="${item.status}">Completed</td>
+                                <td th:text="${item.newUser}"></td>
+                                <td th:text="${item.partner}"></td>
+                                <td th:text="${item.admin}"></td>
+                                <td th:text="${item.sales}"></td>
+                                <td th:text="${item.status}"></td>
                                 <td>
                                     <span class="table-badge badge-live">🔴 Live</span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.inDev}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}">Pass</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.inQA}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}">Pass</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.reopen}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}">No</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.verifyAndClosed}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}">Pass</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}"></span>
                                 </td>
-                                <td th:text="${item.remarks}">Remarks</td>
+                                <td th:text="${item.remarks}"></td>
                                 <td>
                                     <div class="action-buttons-table">
                                         <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">✏️ Edit</a>
@@ -658,43 +730,43 @@
 
                             <!-- Previous Items -->
                             <tr th:each="item : ${previousItems}" th:if="${previousItems != null}">
-                                <td th:text="${item.id}">4</td>
-                                <td th:text="${item.project}">Project Name</td>
-                                <td th:text="${item.bugNumber}">BUG004</td>
-                                <td th:text="${item.issue}">Issue Description</td>
+                                <td th:text="${item.id}"></td>
+                                <td th:text="${item.project}"></td>
+                                <td th:text="${item.bugNumber}"></td>
+                                <td th:text="${item.issue}"></td>
                                 <td>
                                     <span class="table-badge" th:text="${item.severity}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}">S3</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.priority}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}">P3</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}"></span>
                                 </td>
-                                <td th:text="${item.newUser}">Not Applicable</td>
-                                <td th:text="${item.partner}">Not Applicable</td>
-                                <td th:text="${item.admin}">Applicable</td>
-                                <td th:text="${item.sales}">Not Applicable</td>
-                                <td th:text="${item.status}">Completed</td>
+                                <td th:text="${item.newUser}"></td>
+                                <td th:text="${item.partner}"></td>
+                                <td th:text="${item.admin}"></td>
+                                <td th:text="${item.sales}"></td>
+                                <td th:text="${item.status}"></td>
                                 <td>
                                     <span class="table-badge badge-previous">⚫ Previous</span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.inDev}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}">Pass</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.inQA}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}">Pass</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.reopen}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}">No</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}"></span>
                                 </td>
                                 <td>
                                     <span class="table-badge" th:text="${item.verifyAndClosed}" 
-                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}">Pass</span>
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}"></span>
                                 </td>
-                                <td th:text="${item.remarks}">Remarks</td>
+                                <td th:text="${item.remarks}"></td>
                                 <td>
                                     <div class="action-buttons-table">
                                         <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">✏️ Edit</a>
@@ -722,10 +794,11 @@
         // Initialize Charts
         document.addEventListener('DOMContentLoaded', function() {
             initializeCharts();
+            showStatusNotifications();
         });
 
         function initializeCharts() {
-            // Get data from table rows instead of sections
+            // Get data from table rows
             const tableRows = document.querySelectorAll('.data-table tbody tr');
             
             let devStats = { open: 0, pass: 0, fail: 0 };
@@ -847,6 +920,38 @@
                     }
                 }
             });
+        }
+
+        function showStatusNotifications() {
+            // Check URL parameters for status notifications
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            
+            if (action === 'added') {
+                showNotification('✅ Item successfully added to LIVE status!', 'success');
+            } else if (action === 'updated') {
+                showNotification('🔄 Item updated! New version is LIVE, previous version moved to PREVIOUS status.', 'info');
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
         }
 
         // Auto refresh every 5 minutes

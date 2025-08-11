@@ -35,6 +35,27 @@ public class AppServices {
         appRepository.deleteById(id);
     }
 
+    // Enhanced methods for new feature
+    public List<OfferBeezDoshBoard> getLiveItems() {
+        return appRepository.findByLive(true);
+    }
+
+    public List<OfferBeezDoshBoard> getPreviousItems() {
+        return appRepository.findByLive(false);
+    }
+
+    public void moveToLive(OfferBeezDoshBoard item) {
+        item.setLive(true);
+        item.setStatus("Completed");
+        updateItem(item);
+    }
+
+    public void moveToPrevious(OfferBeezDoshBoard item) {
+        item.setLive(false);
+        item.setStatus("Archived");
+        updateItem(item);
+    }
+
     public Map<String, Long> getDevStats() {
         List<OfferBeezDoshBoard> items = appRepository.findAll();
         Map<String, Long> stats = new HashMap<>();

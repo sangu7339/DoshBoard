@@ -60,6 +60,51 @@
             color: #1565c0;
         }
 
+        .status-transition-info {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: linear-gradient(45deg, #d1ecf1, #bee5eb);
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .alert h5 {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .alert p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .badge-live {
+            background: linear-gradient(45deg, #28a745, #1e7e34);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .badge-previous {
+            background: linear-gradient(45deg, #6c757d, #545b62);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -77,6 +122,10 @@
             color: #2c3e50;
             margin-bottom: 8px;
             font-size: 14px;
+        }
+
+        .required {
+            color: #dc3545;
         }
 
         .form-control {
@@ -202,10 +251,6 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .required {
-            color: #dc3545;
-        }
     </style>
 </head>
 <body>
@@ -220,6 +265,15 @@
                 <strong>Updating Item ID:</strong> <span th:text="${item.id}">N/A</span> | 
                 <strong>Project:</strong> <span th:text="${item.project}">N/A</span> | 
                 <strong>Bug#:</strong> <span th:text="${item.bugNumber}">N/A</span>
+            </div>
+
+            <!-- Status Transition Indicator -->
+            <div class="status-transition-info">
+                <div class="alert alert-info">
+                    <h5>🔄 Status Transition</h5>
+                    <p><strong>Current item:</strong> Will be moved to <span class="badge-live">🔴 LIVE</span> status</p>
+                    <p><strong>Previous version:</strong> Will be automatically created in <span class="badge-previous">⚫ PREVIOUS</span> status</p>
+                </div>
             </div>
 
             <form th:action="@{/update}" method="post" th:object="${item}" id="updateForm">
@@ -356,7 +410,7 @@
                 </div>
 
                 <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">💾 Update Item</button>
+                    <button type="submit" class="btn btn-primary">💾 Update to Live</button>
                     <button type="reset" class="btn btn-reset">🔄 Reset Changes</button>
                     <a href="/" class="btn btn-secondary">↩️ Back to Home</a>
                 </div>
@@ -401,12 +455,12 @@
                 const submitBtn = this.querySelector('button[type="submit"]');
                 
                 // Confirm update
-                if (!confirm('Are you sure you want to update this item?')) {
+                if (!confirm('Are you sure you want to update this item? Previous version will be saved.')) {
                     e.preventDefault();
                     return;
                 }
                 
-                submitBtn.innerHTML = '⏳ Updating...';
+                submitBtn.innerHTML = '⏳ Updating to Live...';
                 submitBtn.disabled = true;
                 form.classList.add('loading');
             });
