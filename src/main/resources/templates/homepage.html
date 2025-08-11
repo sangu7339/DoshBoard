@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OfferBeez Dashboard - VentureBeez</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .overall-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .overall-status.positive {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            animation: pulseGreen 3s infinite;
+        }
+
+        .overall-status.negative {
+            background: linear-gradient(45deg, #dc3545, #e74c3c);
+            color: white;
+            animation: pulseRed 2s infinite;
+        }
+
+        @keyframes pulseGreen {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5); }
+        }
+
+        @keyframes pulseRed {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5); }
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-add {
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-edit {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        .btn-delete {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Bar Graphs Section */
+        .charts-section {
+            margin: 30px 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .charts-title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .chart-header {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .dev-chart .chart-header {
+            background: linear-gradient(45deg, #17a2b8, #138496);
+        }
+
+        .qa-chart .chart-header {
+            background: linear-gradient(45deg, #ffc107, #e0a800);
+            color: #333;
+        }
+
+        .live-chart .chart-header {
+            background: linear-gradient(45deg, #28a745, #1e7e34);
+        }
+
+        .previous-chart .chart-header {
+            background: linear-gradient(45deg, #6c757d, #545b62);
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        .chart-stats {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #f8f9fa;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        /* Table Section */
+        .table-section {
+            margin: 30px 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .table-title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table th {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            color: white;
+            font-weight: 600;
+            padding: 15px 12px;
+            text-align: left;
+            font-size: 14px;
+            border-bottom: 2px solid #34495e;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .data-table tbody tr:nth-child(odd) {
+            background-color: white;
+        }
+
+        .table-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .badge-s1, .badge-p1 {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+
+        .badge-s2, .badge-p2 {
+            background: linear-gradient(45deg, #ffc107, #e0a800);
+            color: #333;
+        }
+
+        .badge-s3, .badge-p3 {
+            background: linear-gradient(45deg, #28a745, #1e7e34);
+        }
+
+        .badge-pass {
+            background: linear-gradient(45deg, #28a745, #1e7e34);
+        }
+
+        .badge-fail {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+
+        .badge-open {
+            background: linear-gradient(45deg, #ffc107, #e0a800);
+            color: #333;
+        }
+
+        .badge-pending {
+            background: linear-gradient(45deg, #6c757d, #545b62);
+        }
+
+        .badge-yes {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+
+        .badge-no {
+            background: linear-gradient(45deg, #28a745, #1e7e34);
+        }
+
+        .badge-live {
+            background: linear-gradient(45deg, #28a745, #1e7e34);
+            animation: pulse 2s infinite;
+        }
+
+        .badge-previous {
+            background: linear-gradient(45deg, #6c757d, #545b62);
+        }
+
+        .action-buttons-table {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .overall-status {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 15px auto;
+                display: block;
+                text-align: center;
+                width: fit-content;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                margin: 5px;
+                font-size: 14px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .data-table {
+                font-size: 12px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 6px;
+            }
+
+            .action-buttons-table {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .btn-sm {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .empty-table {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .empty-table h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header fade-in">
+            <h1>🚀 OfferBeez Dashboard - VentureBeez</h1>
+            <div class="overall-status" th:classappend="${overallStatus == 'NEGATIVE'} ? 'negative' : 'positive'">
+                <span th:text="${overallStatus == 'NEGATIVE'} ? '❌ NEGATIVE STATUS' : '✅ POSITIVE STATUS'"></span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons fade-in">
+            <a href="/add" class="btn btn-add">➕ Add New Item</a>
+        </div>
+
+        <!-- Bar Graphs Section -->
+        <div class="charts-section fade-in">
+            <div class="charts-title">📊 Status Bar Graphs</div>
+            <div class="charts-grid">
+                <!-- Development Status Chart -->
+                <div class="chart-card dev-chart">
+                    <div class="chart-header">🔧 Development Status</div>
+                    <div class="chart-container">
+                        <canvas id="devChart"></canvas>
+                    </div>
+                    <div class="chart-stats">
+                        Total Dev Items: <span id="devTotal">0</span>
+                    </div>
+                </div>
+
+                <!-- QA Status Chart -->
+                <div class="chart-card qa-chart">
+                    <div class="chart-header">🧪 QA Status</div>
+                    <div class="chart-container">
+                        <canvas id="qaChart"></canvas>
+                    </div>
+                    <div class="chart-stats">
+                        Total QA Items: <span id="qaTotal">0</span>
+                    </div>
+                </div>
+
+                <!-- Live Status Chart -->
+                <div class="chart-card live-chart">
+                    <div class="chart-header">🔴 Live Status</div>
+                    <div class="chart-container">
+                        <canvas id="liveChart"></canvas>
+                    </div>
+                    <div class="chart-stats">
+                        Total Live Items: <span id="liveTotal">0</span>
+                    </div>
+                </div>
+
+                <!-- Previous Status Chart -->
+                <div class="chart-card previous-chart">
+                    <div class="chart-header">⚫ Previous Status</div>
+                    <div class="chart-container">
+                        <canvas id="previousChart"></canvas>
+                    </div>
+                    <div class="chart-stats">
+                        Total Previous Items: <span id="previousTotal">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-section fade-in">
+            <div class="table-title">📋 Detailed Dashboard Items</div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Project</th>
+                            <th>Bug #</th>
+                            <th>Issue</th>
+                            <th>Severity</th>
+                            <th>Priority</th>
+                            <th>New User</th>
+                            <th>Partner</th>
+                            <th>Admin</th>
+                            <th>Sales</th>
+                            <th>Status</th>
+                            <th>Live</th>
+                            <th>In Dev</th>
+                            <th>In QA</th>
+                            <th>Reopen</th>
+                            <th>Verify & Closed</th>
+                            <th>Remarks</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Check if there are items to display -->
+                        <th:block th:if="${(devItems != null and !devItems.isEmpty()) or (qaItems != null and !qaItems.isEmpty()) or (liveItems != null and !liveItems.isEmpty()) or (previousItems != null and !previousItems.isEmpty())}">
+                            
+                            <!-- Development Items -->
+                            <tr th:each="item : ${devItems}" th:if="${devItems != null}">
+                                <td th:text="${item.id}">1</td>
+                                <td th:text="${item.project}">Project Name</td>
+                                <td th:text="${item.bugNumber}">BUG001</td>
+                                <td th:text="${item.issue}">Issue Description</td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.severity}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}">S1</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.priority}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}">P1</span>
+                                </td>
+                                <td th:text="${item.newUser}">Applicable</td>
+                                <td th:text="${item.partner}">Applicable</td>
+                                <td th:text="${item.admin}">Applicable</td>
+                                <td th:text="${item.sales}">Applicable</td>
+                                <td th:text="${item.status}">In Dev</td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.live} ? 'Live' : 'Previous'" 
+                                          th:class="${item.live} ? 'table-badge badge-live' : 'table-badge badge-previous'">Live</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.inDev}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}">Open</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.inQA}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}">Open</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.reopen}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}">No</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.verifyAndClosed}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}">Pending</span>
+                                </td>
+                                <td th:text="${item.remarks}">Remarks</td>
+                                <td>
+                                    <div class="action-buttons-table">
+                                        <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">✏️ Edit</a>
+                                        <a th:href="@{/delete/{id}(id=${item.id})}" class="btn btn-delete btn-sm" 
+                                           onclick="return confirm('Are you sure you want to delete this item?')">🗑️ Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- QA Items -->
+                            <tr th:each="item : ${qaItems}" th:if="${qaItems != null}">
+                                <td th:text="${item.id}">2</td>
+                                <td th:text="${item.project}">Project Name</td>
+                                <td th:text="${item.bugNumber}">BUG002</td>
+                                <td th:text="${item.issue}">Issue Description</td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.severity}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}">S2</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.priority}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}">P2</span>
+                                </td>
+                                <td th:text="${item.newUser}">Applicable</td>
+                                <td th:text="${item.partner}">Applicable</td>
+                                <td th:text="${item.admin}">Applicable</td>
+                                <td th:text="${item.sales}">Applicable</td>
+                                <td th:text="${item.status}">In QA</td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.live} ? 'Live' : 'Previous'" 
+                                          th:class="${item.live} ? 'table-badge badge-live' : 'table-badge badge-previous'">Live</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.inDev}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}">Pass</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.inQA}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}">Open</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.reopen}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}">No</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.verifyAndClosed}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}">Pending</span>
+                                </td>
+                                <td th:text="${item.remarks}">Remarks</td>
+                                <td>
+                                    <div class="action-buttons-table">
+                                        <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">✏️ Edit</a>
+                                        <a th:href="@{/delete/{id}(id=${item.id})}" class="btn btn-delete btn-sm" 
+                                           onclick="return confirm('Are you sure you want to delete this item?')">🗑️ Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Live Items -->
+                            <tr th:each="item : ${liveItems}" th:if="${liveItems != null}">
+                                <td th:text="${item.id}">3</td>
+                                <td th:text="${item.project}">Project Name</td>
+                                <td th:text="${item.bugNumber}">BUG003</td>
+                                <td th:text="${item.issue}">Issue Description</td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.severity}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}">S1</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.priority}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}">P1</span>
+                                </td>
+                                <td th:text="${item.newUser}">Applicable</td>
+                                <td th:text="${item.partner}">Applicable</td>
+                                <td th:text="${item.admin}">Applicable</td>
+                                <td th:text="${item.sales}">Applicable</td>
+                                <td th:text="${item.status}">Completed</td>
+                                <td>
+                                    <span class="table-badge badge-live">🔴 Live</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.inDev}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}">Pass</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.inQA}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}">Pass</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.reopen}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}">No</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.verifyAndClosed}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}">Pass</span>
+                                </td>
+                                <td th:text="${item.remarks}">Remarks</td>
+                                <td>
+                                    <div class="action-buttons-table">
+                                        <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">✏️ Edit</a>
+                                        <a th:href="@{/delete/{id}(id=${item.id})}" class="btn btn-delete btn-sm" 
+                                           onclick="return confirm('Are you sure you want to delete this item?')">🗑️ Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Previous Items -->
+                            <tr th:each="item : ${previousItems}" th:if="${previousItems != null}">
+                                <td th:text="${item.id}">4</td>
+                                <td th:text="${item.project}">Project Name</td>
+                                <td th:text="${item.bugNumber}">BUG004</td>
+                                <td th:text="${item.issue}">Issue Description</td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.severity}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.severity)}">S3</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.priority}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.priority)}">P3</span>
+                                </td>
+                                <td th:text="${item.newUser}">Not Applicable</td>
+                                <td th:text="${item.partner}">Not Applicable</td>
+                                <td th:text="${item.admin}">Applicable</td>
+                                <td th:text="${item.sales}">Not Applicable</td>
+                                <td th:text="${item.status}">Completed</td>
+                                <td>
+                                    <span class="table-badge badge-previous">⚫ Previous</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.inDev}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inDev)}">Pass</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.inQA}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.inQA)}">Pass</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.reopen}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.reopen)}">No</span>
+                                </td>
+                                <td>
+                                    <span class="table-badge" th:text="${item.verifyAndClosed}" 
+                                          th:class="'table-badge badge-' + ${#strings.toLowerCase(item.verifyAndClosed)}">Pass</span>
+                                </td>
+                                <td th:text="${item.remarks}">Remarks</td>
+                                <td>
+                                    <div class="action-buttons-table">
+                                        <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">✏️ Edit</a>
+                                        <a th:href="@{/delete/{id}(id=${item.id})}" class="btn btn-delete btn-sm" 
+                                           onclick="return confirm('Are you sure you want to delete this item?')">🗑️ Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </th:block>
+                        
+                        <!-- Empty state -->
+                        <tr th:if="${(devItems == null or devItems.isEmpty()) and (qaItems == null or qaItems.isEmpty()) and (liveItems == null or liveItems.isEmpty()) and (previousItems == null or previousItems.isEmpty())}">
+                            <td colspan="18" class="empty-table">
+                                <h3>📭 No Data Available</h3>
+                                <p>Click "Add New Item" button above to create your first dashboard item!</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+        });
+
+        function initializeCharts() {
+            // Get data from table rows instead of sections
+            const tableRows = document.querySelectorAll('.data-table tbody tr');
+            
+            let devStats = { open: 0, pass: 0, fail: 0 };
+            let qaStats = { open: 0, pass: 0, fail: 0 };
+            let liveCount = 0;
+            let previousCount = 0;
+
+            tableRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 1) {
+                    // Get In Dev status (column 12)
+                    const devStatus = cells[12].textContent.trim().toLowerCase();
+                    if (devStatus === 'open') devStats.open++;
+                    else if (devStatus === 'pass') devStats.pass++;
+                    else if (devStatus === 'fail') devStats.fail++;
+
+                    // Get In QA status (column 13)
+                    const qaStatus = cells[13].textContent.trim().toLowerCase();
+                    if (qaStatus === 'open') qaStats.open++;
+                    else if (qaStatus === 'pass') qaStats.pass++;
+                    else if (qaStatus === 'fail') qaStats.fail++;
+
+                    // Get Live status (column 11)
+                    const liveStatus = cells[11].textContent.trim().toLowerCase();
+                    if (liveStatus.includes('live')) liveCount++;
+                    else if (liveStatus.includes('previous')) previousCount++;
+                }
+            });
+
+            // Update totals
+            document.getElementById('devTotal').textContent = devStats.open + devStats.pass + devStats.fail;
+            document.getElementById('qaTotal').textContent = qaStats.open + qaStats.pass + qaStats.fail;
+            document.getElementById('liveTotal').textContent = liveCount;
+            document.getElementById('previousTotal').textContent = previousCount;
+
+            // Create Development Chart
+            createBarChart('devChart', 'Development Status', 
+                ['Open', 'Pass', 'Fail'], 
+                [devStats.open, devStats.pass, devStats.fail],
+                ['#ffc107', '#28a745', '#dc3545']
+            );
+
+            // Create QA Chart
+            createBarChart('qaChart', 'QA Status', 
+                ['Open', 'Pass', 'Fail'], 
+                [qaStats.open, qaStats.pass, qaStats.fail],
+                ['#ffc107', '#28a745', '#dc3545']
+            );
+
+            // Create Live Chart
+            createBarChart('liveChart', 'Live Items', 
+                ['Live Items'], 
+                [liveCount],
+                ['#28a745']
+            );
+
+            // Create Previous Chart
+            createBarChart('previousChart', 'Previous Items', 
+                ['Previous Items'], 
+                [previousCount],
+                ['#6c757d']
+            );
+        }
+
+        function createBarChart(canvasId, label, labels, data, colors) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors,
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y + ' items';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return Number.isInteger(value) ? value : '';
+                                }
+                            },
+                            grid: {
+                                color: '#e9ecef'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
+        // Auto refresh every 5 minutes
+        setTimeout(function() {
+            location.reload();
+        }, 300000);
+
+        // Status indicator updates
+        function updateOverallStatus() {
+            const statusElement = document.querySelector('.overall-status');
+            const isNegative = statusElement.classList.contains('negative');
+            
+            if (isNegative) {
+                document.body.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
+            } else {
+                document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }
+        }
+
+        // Call on page load
+        updateOverallStatus();
+    </script>
+</body>
+</html>
