@@ -10,7 +10,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; }
-    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .container { max-width: 100%; margin: 0 auto; padding: 20px; }
     .header { background: rgba(255,255,255,.95); padding: 20px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,.1); position: relative; }
     .header h1 { color: #2c3e50; text-align: center; margin-bottom: 10px; font-size: 2rem; }
     .overall-status { position: absolute; top: 20px; right: 20px; padding: 10px 20px; border-radius: 25px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,.2); }
@@ -21,8 +21,8 @@
     .btn { display: inline-block; padding: 12px 24px; margin: 0 8px; border: none; border-radius: 25px; font-size: 14px; font-weight: 600; text-decoration: none; color: #fff; cursor: pointer; transition: all .3s ease; box-shadow: 0 4px 15px rgba(0,0,0,.2); }
     .btn-add { background: linear-gradient(45deg,#28a745,#20c997); }
     .btn-add:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(40,167,69,.4); }
-    .btn-edit { background: linear-gradient(45deg,#007bff,#0056b3); padding: 6px 12px; font-size: 12px; }
-    .btn-delete { background: linear-gradient(45deg,#dc3545,#c82333); padding: 6px 12px; font-size: 12px; }
+    .btn-edit { background: linear-gradient(45deg,#007bff,#0056b3); padding: 4px 8px; font-size: 10px; }
+    .btn-delete { background: linear-gradient(45deg,#dc3545,#c82333); padding: 4px 8px; font-size: 10px; }
 
     .section-card { background: rgba(255,255,255,.95); border-radius: 15px; padding: 24px; margin: 24px 0; box-shadow: 0 8px 32px rgba(0,0,0,.1); }
     .section-title { text-align: center; color: #2c3e50; font-size: 1.5rem; margin-bottom: 18px; font-weight: 700; }
@@ -37,34 +37,198 @@
       margin: 0 auto; 
     }
     
-    .chart-card { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 8px 25px rgba(0,0,0,.08); }
-    .chart-header { text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; color: #fff; font-weight: 700; font-size: 14px; }
+    .chart-card { 
+      background: #fff; 
+      border-radius: 12px; 
+      padding: 14px; 
+      box-shadow: 0 8px 25px rgba(0,0,0,.08); 
+      height: 380px;
+    }
+    
+    .chart-header { 
+      text-align: center; 
+      padding: 12px; 
+      border-radius: 10px; 
+      margin-bottom: 12px; 
+      color: #fff; 
+      font-weight: 700; 
+      font-size: 13px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
     .dev-chart .chart-header { background: linear-gradient(45deg,#17a2b8,#138496); }
     .qa-chart .chart-header { background: linear-gradient(45deg,#ffc107,#e0a800); color: #333; }
     .live-items-chart .chart-header { background: linear-gradient(45deg,#28a745,#20c997); }
     .previous-items-chart .chart-header { background: linear-gradient(45deg,#6c757d,#495057); }
-    .chart-container { height: 350px; position: relative; }
-    .chart-stats { text-align: center; margin-top: 8px; padding-top: 8px; border-top: 2px solid #f1f3f5; color: #6c757d; font-weight: 600; font-size: 12px; }
+    
+    /* Chart container */
+    .chart-container { 
+      height: 240px;
+      position: relative; 
+      display: block;
+    }
+    
+    .bar-chart-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      padding-right: 140px;
+      padding-bottom: 10px;
+    }
+    
+    /* Pie chart positioned at right bottom */
+    .pie-chart-container {
+      position: absolute;
+      bottom: 15px;
+      right: 10px;
+      width: 120px;
+      height: 120px;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      padding: 5px;
+      border: 2px solid #f8f9fa;
+    }
+    
+    .chart-stats { 
+      text-align: center; 
+      margin-top: 12px; 
+      padding: 8px 12px; 
+      border-top: 2px solid #f1f3f5; 
+      color: #495057; 
+      font-weight: 700; 
+      font-size: 13px;
+      background: rgba(248, 249, 250, 0.8);
+      border-radius: 6px;
+    }
 
-    .data-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,.1); }
-    .data-table th { background: linear-gradient(45deg,#2c3e50,#34495e); color: #fff; font-weight: 600; padding: 10px 8px; text-align: left; font-size: 12px; border-bottom: 2px solid #34495e; white-space: nowrap; }
-    .data-table td { padding: 9px 8px; border-bottom: 1px solid #e9ecef; font-size: 12px; vertical-align: middle; }
+    /* Optimized table without scroll - fits all columns */
+    .data-table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      background: #fff; 
+      border-radius: 15px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,.1);
+      font-size: 11px;
+      table-layout: fixed;
+    }
+    
+    .data-table th { 
+      background: linear-gradient(45deg,#2c3e50,#34495e); 
+      color: #fff; 
+      font-weight: 700; 
+      padding: 8px 4px; 
+      text-align: center; 
+      font-size: 10px; 
+      border-right: 1px solid #34495e;
+      white-space: nowrap; 
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .data-table td { 
+      padding: 6px 4px; 
+      border-bottom: 1px solid #e9ecef; 
+      border-right: 1px solid #f1f3f5;
+      font-size: 10px; 
+      vertical-align: middle;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Column width optimization */
+    .data-table th:nth-child(1), .data-table td:nth-child(1) { width: 3%; } /* ID */
+    .data-table th:nth-child(2), .data-table td:nth-child(2) { width: 8%; } /* Project */
+    .data-table th:nth-child(3), .data-table td:nth-child(3) { width: 5%; } /* Bug # */
+    .data-table th:nth-child(4), .data-table td:nth-child(4) { width: 15%; white-space: normal; } /* Issue */
+    .data-table th:nth-child(5), .data-table td:nth-child(5) { width: 5%; } /* Severity */
+    .data-table th:nth-child(6), .data-table td:nth-child(6) { width: 5%; } /* Priority */
+    .data-table th:nth-child(7), .data-table td:nth-child(7) { width: 5%; } /* New User */
+    .data-table th:nth-child(8), .data-table td:nth-child(8) { width: 5%; } /* Partner */
+    .data-table th:nth-child(9), .data-table td:nth-child(9) { width: 5%; } /* Admin */
+    .data-table th:nth-child(10), .data-table td:nth-child(10) { width: 5%; } /* Sales */
+    .data-table th:nth-child(11), .data-table td:nth-child(11) { width: 5%; } /* Status */
+    .data-table th:nth-child(12), .data-table td:nth-child(12) { width: 5%; } /* Live */
+    .data-table th:nth-child(13), .data-table td:nth-child(13) { width: 5%; } /* In Dev */
+    .data-table th:nth-child(14), .data-table td:nth-child(14) { width: 5%; } /* In QA */
+    .data-table th:nth-child(15), .data-table td:nth-child(15) { width: 4%; } /* Reopen */
+    .data-table th:nth-child(16), .data-table td:nth-child(16) { width: 6%; } /* Verify */
+    .data-table th:nth-child(17), .data-table td:nth-child(17) { width: 10%; white-space: normal; } /* Remarks */
+    .data-table th:nth-child(18), .data-table td:nth-child(18) { width: 9%; } /* Actions */
+    
+    .data-table tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    
+    .data-table tr:hover {
+      background-color: #e3f2fd;
+      transition: background-color 0.3s ease;
+    }
 
-    .table-badge { padding: 5px 9px; border-radius: 14px; font-size: 11px; font-weight: 700; color: #fff; display: inline-block; min-width: 54px; text-align: center; }
+    .table-badge { 
+      padding: 3px 6px; 
+      border-radius: 12px; 
+      font-size: 9px; 
+      font-weight: 700; 
+      color: #fff; 
+      display: inline-block; 
+      min-width: 30px; 
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
     .badge-s1,.badge-p1,.badge-fail,.badge-yes { background: linear-gradient(45deg,#dc3545,#c82333); }
     .badge-s2,.badge-p2,.badge-open,.badge-pending { background: linear-gradient(45deg,#ffc107,#e0a800); color: #333; }
     .badge-s3,.badge-p3,.badge-pass,.badge-no,.badge-live { background: linear-gradient(45deg,#28a745,#1e7e34); }
 
-    .action-buttons-table { display: flex; gap: 6px; justify-content: center; }
-    .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 14px; color: #fff; text-decoration: none; }
+    .action-buttons-table { display: flex; gap: 2px; justify-content: center; }
+    .btn-sm { padding: 3px 6px; font-size: 9px; border-radius: 10px; color: #fff; text-decoration: none; }
 
-    @media (max-width:768px){
-      .container{padding:10px;}
-      .header h1{font-size:1.3rem;}
-      .chart-container{height:280px;}
+    @media (max-width: 768px) {
+      .container { padding: 10px; }
+      .header h1 { font-size: 1.3rem; }
+      
+      .chart-card { height: 300px; }
+      
+      .chart-container { height: 200px; }
+      
+      .bar-chart-container {
+        padding-right: 110px;
+        padding-bottom: 5px;
+      }
+      
+      .pie-chart-container {
+        width: 100px;
+        height: 100px;
+        bottom: 10px;
+        right: 5px;
+      }
+      
       .charts-grid { 
         grid-template-columns: 1fr; 
         grid-template-rows: repeat(4, 1fr);
+        gap: 15px;
+      }
+      
+      .data-table {
+        font-size: 9px;
+      }
+      
+      .data-table th {
+        padding: 6px 2px;
+        font-size: 8px;
+      }
+      
+      .data-table td {
+        padding: 4px 2px;
+        font-size: 8px;
+      }
+      
+      .table-badge {
+        font-size: 7px;
+        padding: 2px 4px;
+        min-width: 25px;
       }
     }
   </style>
@@ -85,53 +249,65 @@
 
   <!-- Charts Section -->
   <div class="section-card">
-    <div class="section-title">📊 Dashboard Charts - 2x2 Grid Layout</div>
+    <div class="section-title">📊 Dashboard Charts - Perfect Value Centering</div>
     <div class="charts-grid">
       <div class="chart-card dev-chart">
         <div class="chart-header">🔧 Development: Each Bar = S1(red) + S2(yellow) + S3(green)</div>
-        <div class="chart-container"><canvas id="devChart"></canvas></div>
+        <div class="chart-container">
+          <div class="bar-chart-container"><canvas id="devChart"></canvas></div>
+          <div class="pie-chart-container"><canvas id="devPieChart"></canvas></div>
+        </div>
         <div class="chart-stats">Total Dev Items: <span id="devTotal">0</span></div>
       </div>
 
       <div class="chart-card qa-chart">
         <div class="chart-header">🧪 QA: Each Bar = P1(red) + P2(yellow) + P3(green)</div>
-        <div class="chart-container"><canvas id="qaChart"></canvas></div>
+        <div class="chart-container">
+          <div class="bar-chart-container"><canvas id="qaChart"></canvas></div>
+          <div class="pie-chart-container"><canvas id="qaPieChart"></canvas></div>
+        </div>
         <div class="chart-stats">Total QA Items: <span id="qaTotal">0</span></div>
       </div>
 
       <div class="chart-card live-items-chart">
         <div class="chart-header">🟢 Live Items: Current Production Issues</div>
-        <div class="chart-container"><canvas id="liveItemsChart"></canvas></div>
+        <div class="chart-container">
+          <div class="bar-chart-container"><canvas id="liveItemsChart"></canvas></div>
+          <div class="pie-chart-container"><canvas id="liveItemsPieChart"></canvas></div>
+        </div>
         <div class="chart-stats">Total Live Items: <span id="liveItemsTotal">0</span></div>
       </div>
 
       <div class="chart-card previous-items-chart">
         <div class="chart-header">🔵 Previous Items: Historical Issues</div>
-        <div class="chart-container"><canvas id="previousItemsChart"></canvas></div>
+        <div class="chart-container">
+          <div class="bar-chart-container"><canvas id="previousItemsChart"></canvas></div>
+          <div class="pie-chart-container"><canvas id="previousItemsPieChart"></canvas></div>
+        </div>
         <div class="chart-stats">Total Previous Items: <span id="previousItemsTotal">0</span></div>
       </div>
     </div>
   </div>
 
-  <!-- Table Section -->
+  <!-- Optimized Table Section - NO SCROLL -->
   <div class="section-card">
-    <div class="section-title">📋 Detailed Dashboard Items</div>
+    <div class="section-title">📋 Complete Data Table</div>
     <table class="data-table">
       <thead>
       <tr>
-        <th>ID</th><th>Project</th><th>Bug #</th><th>Issue</th>
-        <th>Severity</th><th>Priority</th><th>New User</th><th>Partner</th>
-        <th>Admin</th><th>Sales</th><th>Status</th><th>Live</th>
-        <th>In Dev</th><th>In QA</th><th>Reopen</th><th>Verify & Closed</th>
+        <th>ID</th><th>Project</th><th>Bug #</th><th>Issue Description</th>
+        <th>Sev</th><th>Pri</th><th>New</th><th>Part</th>
+        <th>Adm</th><th>Sale</th><th>Status</th><th>Live</th>
+        <th>Dev</th><th>QA</th><th>Reop</th><th>V&C</th>
         <th>Remarks</th><th>Actions</th>
       </tr>
       </thead>
       <tbody>
       <tr th:each="item : ${devItems}">
         <td th:text="${item.id}"></td>
-        <td th:text="${item.project}"></td>
+        <td th:text="${item.project}" title="Project"></td>
         <td th:text="${item.bugNumber}"></td>
-        <td th:text="${item.issue}"></td>
+        <td th:text="${item.issue}" title="${item.issue}"></td>
         <td><span th:text="${item.severity}" th:class="'table-badge badge-' + ${item.severity}"></span></td>
         <td><span th:text="${item.priority}" th:class="'table-badge badge-' + ${item.priority}"></span></td>
         <td><span th:text="${item.newUser}" th:class="'table-badge badge-' + ${item.newUser}"></span></td>
@@ -139,16 +315,16 @@
         <td><span th:text="${item.admin}" th:class="'table-badge badge-' + ${item.admin}"></span></td>
         <td><span th:text="${item.sales}" th:class="'table-badge badge-' + ${item.sales}"></span></td>
         <td><span th:text="${item.status}" th:class="'table-badge badge-' + ${item.status}"></span></td>
-        <td><span th:text="${item.live} ? 'Live' : 'Previous'" th:class="'table-badge badge-' + (${item.live} ? 'live' : 'no')"></span></td>
+        <td><span th:text="${item.live} ? 'Live' : 'Prev'" th:class="'table-badge badge-' + (${item.live} ? 'live' : 'no')"></span></td>
         <td><span th:text="${item.inDev}" th:class="'table-badge badge-' + ${item.inDev}"></span></td>
         <td><span th:text="${item.inQA}" th:class="'table-badge badge-' + ${item.inQA}"></span></td>
         <td th:text="${item.reopen}"></td>
         <td th:text="${item.verifyAndClosed}"></td>
-        <td th:text="${item.remarks}"></td>
+        <td th:text="${item.remarks}" title="${item.remarks}"></td>
         <td>
           <div class="action-buttons-table">
-            <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">✏️ Edit</a>
-            <a th:href="@{/delete/{id}(id=${item.id})}" class="btn btn-delete btn-sm" onclick="return confirm('Delete this item?')">🗑️ Delete</a>
+            <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">✏️</a>
+            <a th:href="@{/delete/{id}(id=${item.id})}" class="btn btn-delete btn-sm" onclick="return confirm('Delete this item?')">🗑️</a>
           </div>
         </td>
       </tr>
@@ -159,7 +335,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() { 
-    console.log('DOM loaded, initializing charts...');
+    console.log('DOM loaded, initializing perfectly centered charts...');
     initializeCharts(); 
 });
 
@@ -194,27 +370,22 @@ function initializeCharts() {
   rows.forEach((row, index) => {
     const cells = row.querySelectorAll('td');
     if (cells.length < 18) {
-      console.log(`Row ${index} has insufficient cells: ${cells.length}`);
       return;
     }
 
     // Get values from table cells (trimmed and lowercased for comparison)
-    const severity = cells[4].textContent.trim().toLowerCase();
-    const priority = cells[5].textContent.trim().toLowerCase();
-    const newUser = cells[6].textContent.trim().toLowerCase();
-    const partner = cells[7].textContent.trim().toLowerCase();
-    const admin = cells[8].textContent.trim().toLowerCase();
-    const sales = cells[9].textContent.trim().toLowerCase();
-    const inDev = cells[12].textContent.trim().toLowerCase();
-    const inQA = cells[13].textContent.trim().toLowerCase();
+    const severity = cells[4].querySelector('.table-badge').textContent.trim().toLowerCase();
+    const priority = cells[5].querySelector('.table-badge').textContent.trim().toLowerCase();
+    const newUser = cells[6].querySelector('.table-badge').textContent.trim().toLowerCase();
+    const partner = cells[7].querySelector('.table-badge').textContent.trim().toLowerCase();
+    const admin = cells[8].querySelector('.table-badge').textContent.trim().toLowerCase();
+    const sales = cells[9].querySelector('.table-badge').textContent.trim().toLowerCase();
+    const inDev = cells[12].querySelector('.table-badge').textContent.trim().toLowerCase();
+    const inQA = cells[13].querySelector('.table-badge').textContent.trim().toLowerCase();
     
     // Get live status from the "Live" column (index 11)
-    const liveStatus = cells[11].textContent.trim().toLowerCase();
+    const liveStatus = cells[11].querySelector('.table-badge').textContent.trim().toLowerCase();
     const isLive = liveStatus === 'live';
-
-    console.log(`Row ${index}:`, {
-      severity, priority, newUser, partner, admin, sales, inDev, inQA, liveStatus, isLive
-    });
 
     // Determine which categories this item belongs to
     const itemCategories = [];
@@ -223,92 +394,47 @@ function initializeCharts() {
     if (admin === 'yes') itemCategories.push('Admin');
     if (sales === 'yes') itemCategories.push('Sales');
 
-    console.log(`Row ${index} categories:`, itemCategories);
-
     // If no category is marked, skip this item
     if (itemCategories.length === 0) {
-      console.log(`Row ${index} has no categories marked, skipping`);
       return;
     }
 
     // Count for each applicable category
     itemCategories.forEach(category => {
-      // Count Dev items (items that are in development)
+      // Count Dev items
       if (inDev === 'open' || inDev === 'pass' || inDev === 'fail' || inDev === 'pending') {
-        // Count by severity
-        if (severity === 's1') {
-          devSeverityData[category].s1++;
-          console.log(`Added S1 dev item for ${category}`);
-        } else if (severity === 's2') {
-          devSeverityData[category].s2++;
-          console.log(`Added S2 dev item for ${category}`);
-        } else if (severity === 's3') {
-          devSeverityData[category].s3++;
-          console.log(`Added S3 dev item for ${category}`);
-        }
+        if (severity === 's1') devSeverityData[category].s1++;
+        else if (severity === 's2') devSeverityData[category].s2++;
+        else if (severity === 's3') devSeverityData[category].s3++;
         
-        // Count by priority
-        if (priority === 'p1') {
-          devPriorityData[category].p1++;
-        } else if (priority === 'p2') {
-          devPriorityData[category].p2++;
-        } else if (priority === 'p3') {
-          devPriorityData[category].p3++;
-        }
+        if (priority === 'p1') devPriorityData[category].p1++;
+        else if (priority === 'p2') devPriorityData[category].p2++;
+        else if (priority === 'p3') devPriorityData[category].p3++;
       }
 
-      // Count QA items (items that are in QA)
+      // Count QA items
       if (inQA === 'open' || inQA === 'pass' || inQA === 'fail' || inQA === 'pending') {
-        // Count by severity
-        if (severity === 's1') {
-          qaSeverityData[category].s1++;
-          console.log(`Added S1 QA item for ${category}`);
-        } else if (severity === 's2') {
-          qaSeverityData[category].s2++;
-          console.log(`Added S2 QA item for ${category}`);
-        } else if (severity === 's3') {
-          qaSeverityData[category].s3++;
-          console.log(`Added S3 QA item for ${category}`);
-        }
+        if (severity === 's1') qaSeverityData[category].s1++;
+        else if (severity === 's2') qaSeverityData[category].s2++;
+        else if (severity === 's3') qaSeverityData[category].s3++;
         
-        // Count by priority
-        if (priority === 'p1') {
-          qaPriorityData[category].p1++;
-        } else if (priority === 'p2') {
-          qaPriorityData[category].p2++;
-        } else if (priority === 'p3') {
-          qaPriorityData[category].p3++;
-        }
+        if (priority === 'p1') qaPriorityData[category].p1++;
+        else if (priority === 'p2') qaPriorityData[category].p2++;
+        else if (priority === 'p3') qaPriorityData[category].p3++;
       }
 
-      // Count Live and Previous items by severity
+      // Count Live and Previous items
       if (isLive) {
-        if (severity === 's1') {
-          liveItemsData[category].s1++;
-        } else if (severity === 's2') {
-          liveItemsData[category].s2++;
-        } else if (severity === 's3') {
-          liveItemsData[category].s3++;
-        }
+        if (severity === 's1') liveItemsData[category].s1++;
+        else if (severity === 's2') liveItemsData[category].s2++;
+        else if (severity === 's3') liveItemsData[category].s3++;
       } else {
-        if (severity === 's1') {
-          previousItemsData[category].s1++;
-        } else if (severity === 's2') {
-          previousItemsData[category].s2++;
-        } else if (severity === 's3') {
-          previousItemsData[category].s3++;
-        }
+        if (severity === 's1') previousItemsData[category].s1++;
+        else if (severity === 's2') previousItemsData[category].s2++;
+        else if (severity === 's3') previousItemsData[category].s3++;
       }
     });
   });
-
-  // Log final data for debugging
-  console.log('Dev Severity Data:', devSeverityData);
-  console.log('Dev Priority Data:', devPriorityData);
-  console.log('QA Severity Data:', qaSeverityData);
-  console.log('QA Priority Data:', qaPriorityData);
-  console.log('Live Items Data:', liveItemsData);
-  console.log('Previous Items Data:', previousItemsData);
 
   // Calculate totals
   let devTotal = 0, qaTotal = 0, liveTotal = 0, previousTotal = 0;
@@ -322,11 +448,7 @@ function initializeCharts() {
     qaTotal += qaCatTotal;
     liveTotal += liveCatTotal;
     previousTotal += previousCatTotal;
-    
-    console.log(`${cat}: Dev=${devCatTotal}, QA=${qaCatTotal}, Live=${liveCatTotal}, Previous=${previousCatTotal}`);
   });
-
-  console.log(`Totals: Dev=${devTotal}, QA=${qaTotal}, Live=${liveTotal}, Previous=${previousTotal}`);
 
   // Update totals in UI
   setText('devTotal', devTotal);
@@ -334,29 +456,33 @@ function initializeCharts() {
   setText('liveItemsTotal', liveTotal);
   setText('previousItemsTotal', previousTotal);
 
-  // Create 4 charts in 2x2 grid
-  createStackedSeverityChart('devChart', 'Development Items by Severity', devSeverityData);
-  createStackedPriorityChart('qaChart', 'QA Items by Priority', qaPriorityData);
-  createStackedSeverityChart('liveItemsChart', 'Live Items by Severity', liveItemsData);
-  createStackedSeverityChart('previousItemsChart', 'Previous Items by Severity', previousItemsData);
+  // Create 4 charts with perfectly centered values
+  createCombinedSeverityChart('devChart', 'devPieChart', 'Development Items by Severity', devSeverityData);
+  createCombinedPriorityChart('qaChart', 'qaPieChart', 'QA Items by Priority', qaPriorityData);
+  createCombinedSeverityChart('liveItemsChart', 'liveItemsPieChart', 'Live Items by Severity', liveItemsData);
+  createCombinedSeverityChart('previousItemsChart', 'previousItemsPieChart', 'Previous Items by Severity', previousItemsData);
 }
 
 function setText(id, value) {
   const element = document.getElementById(id);
   if (element) {
     element.textContent = value;
-    console.log(`Set ${id} to ${value}`);
-  } else {
-    console.log(`Element ${id} not found`);
   }
+}
+
+function createCombinedSeverityChart(barCanvasId, pieCanvasId, title, data) {
+  createStackedSeverityChart(barCanvasId, title, data);
+  createSeverityPieChart(pieCanvasId, data);
+}
+
+function createCombinedPriorityChart(barCanvasId, pieCanvasId, title, data) {
+  createStackedPriorityChart(barCanvasId, title, data);
+  createPriorityPieChart(pieCanvasId, data);
 }
 
 function createStackedSeverityChart(canvasId, title, data) {
   const canvas = document.getElementById(canvasId);
-  if (!canvas) {
-    console.log(`Canvas ${canvasId} not found`);
-    return;
-  }
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
   const categories = ['Partner', 'Sales', 'New User', 'Admin'];
@@ -385,8 +511,6 @@ function createStackedSeverityChart(canvasId, title, data) {
     }
   ];
 
-  console.log(`Creating ${canvasId} with data:`, datasets);
-
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -414,39 +538,75 @@ function createStackedSeverityChart(canvasId, title, data) {
       plugins: {
         legend: { 
           display: true,
-          position: 'top'
+          position: 'top',
+          labels: { fontSize: 10 }
         },
         tooltip: {
           mode: 'index',
-          intersect: false,
-          callbacks: {
-            title: (tooltipItems) => {
-              return `${tooltipItems[0].label} Category`;
-            },
-            label: (context) => {
-              return `${context.dataset.label}: ${context.parsed.y} items`;
-            },
-            footer: (tooltipItems) => {
-              const total = tooltipItems.reduce((sum, item) => sum + item.parsed.y, 0);
-              return `Total for ${tooltipItems[0].label}: ${total} items`;
-            }
-          }
+          intersect: false
         }
       },
       animation: { 
         duration: 900, 
         easing: 'easeInOutQuart' 
       }
-    }
+    },
+    plugins: [{
+      id: 'perfectCenterValues',
+      afterDatasetsDraw: function(chart) {
+        const ctx = chart.ctx;
+        const chartArea = chart.chartArea;
+        
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          
+          meta.data.forEach((element, index) => {
+            const value = dataset.data[index];
+            if (value > 0) {
+              // Calculate exact center of each segment
+              let yStart = element.base;
+              let yEnd = element.y;
+              
+              // For stacked bars, calculate the cumulative position
+              for (let i = 0; i < datasetIndex; i++) {
+                const prevValue = chart.data.datasets[i].data[index] || 0;
+                if (prevValue > 0) {
+                  const prevMeta = chart.getDatasetMeta(i);
+                  const prevElement = prevMeta.data[index];
+                  yStart = prevElement.y;
+                }
+              }
+              
+              // Perfect center calculation
+              const centerX = element.x;
+              const centerY = yStart + (yEnd - yStart) / 2;
+              
+              // Enhanced text styling
+              ctx.save();
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 14px Arial';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              
+              // Text shadow for better visibility
+              ctx.shadowColor = 'rgba(0,0,0,0.7)';
+              ctx.shadowBlur = 4;
+              ctx.shadowOffsetX = 1;
+              ctx.shadowOffsetY = 1;
+              
+              ctx.fillText(value, centerX, centerY);
+              ctx.restore();
+            }
+          });
+        });
+      }
+    }]
   });
 }
 
 function createStackedPriorityChart(canvasId, title, data) {
   const canvas = document.getElementById(canvasId);
-  if (!canvas) {
-    console.log(`Canvas ${canvasId} not found`);
-    return;
-  }
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
   const categories = ['Partner', 'Sales', 'New User', 'Admin'];
@@ -475,8 +635,6 @@ function createStackedPriorityChart(canvasId, title, data) {
     }
   ];
 
-  console.log(`Creating ${canvasId} with data:`, datasets);
-
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -504,30 +662,290 @@ function createStackedPriorityChart(canvasId, title, data) {
       plugins: {
         legend: { 
           display: true,
-          position: 'top'
+          position: 'top',
+          labels: { fontSize: 10 }
         },
         tooltip: {
           mode: 'index',
-          intersect: false,
-          callbacks: {
-            title: (tooltipItems) => {
-              return `${tooltipItems[0].label} Category`;
-            },
-            label: (context) => {
-              return `${context.dataset.label}: ${context.parsed.y} items`;
-            },
-            footer: (tooltipItems) => {
-              const total = tooltipItems.reduce((sum, item) => sum + item.parsed.y, 0);
-              return `Total for ${tooltipItems[0].label}: ${total} items`;
-            }
-          }
+          intersect: false
         }
       },
       animation: { 
         duration: 900, 
         easing: 'easeInOutQuart' 
       }
-    }
+    },
+    plugins: [{
+      id: 'perfectCenterValues',
+      afterDatasetsDraw: function(chart) {
+        const ctx = chart.ctx;
+        
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          
+          meta.data.forEach((element, index) => {
+            const value = dataset.data[index];
+            if (value > 0) {
+              // Calculate exact center of each segment
+              let yStart = element.base;
+              let yEnd = element.y;
+              
+              // For stacked bars, calculate the cumulative position
+              for (let i = 0; i < datasetIndex; i++) {
+                const prevValue = chart.data.datasets[i].data[index] || 0;
+                if (prevValue > 0) {
+                  const prevMeta = chart.getDatasetMeta(i);
+                  const prevElement = prevMeta.data[index];
+                  yStart = prevElement.y;
+                }
+              }
+              
+              // Perfect center calculation
+              const centerX = element.x;
+              const centerY = yStart + (yEnd - yStart) / 2;
+              
+              // Enhanced text styling
+              ctx.save();
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 14px Arial';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              
+              // Text shadow for better visibility
+              ctx.shadowColor = 'rgba(0,0,0,0.7)';
+              ctx.shadowBlur = 4;
+              ctx.shadowOffsetX = 1;
+              ctx.shadowOffsetY = 1;
+              
+              ctx.fillText(value, centerX, centerY);
+              ctx.restore();
+            }
+          });
+        });
+      }
+    }]
+  });
+}
+
+function createSeverityPieChart(canvasId, data) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const categories = ['Partner', 'Sales', 'New User', 'Admin'];
+  let s1Total = 0, s2Total = 0, s3Total = 0;
+  
+  categories.forEach(cat => {
+    s1Total += data[cat].s1;
+    s2Total += data[cat].s2;
+    s3Total += data[cat].s3;
+  });
+
+  // Only show data that has values
+  const labels = [];
+  const chartData = [];
+  const colors = [];
+  
+  if (s1Total > 0) {
+    labels.push('S1');
+    chartData.push(s1Total);
+    colors.push('#dc3545');
+  }
+  if (s2Total > 0) {
+    labels.push('S2');
+    chartData.push(s2Total);
+    colors.push('#ffc107');
+  }
+  if (s3Total > 0) {
+    labels.push('S3');
+    chartData.push(s3Total);
+    colors.push('#28a745');
+  }
+
+  const pieData = {
+    labels: labels,
+    datasets: [{
+      data: chartData,
+      backgroundColor: colors,
+      borderColor: colors,
+      borderWidth: 2
+    }]
+  };
+
+  new Chart(ctx, {
+    type: 'pie',
+    data: pieData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const total = s1Total + s2Total + s3Total;
+              const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+              return `${context.label}: ${context.parsed} (${percentage}%)`;
+            }
+          }
+        }
+      },
+      animation: {
+        duration: 900,
+        easing: 'easeInOutQuart'
+      }
+    },
+    plugins: [{
+      id: 'perfectPieCenter',
+      afterDatasetsDraw: function(chart) {
+        const ctx = chart.ctx;
+        const dataset = chart.data.datasets[0];
+        const meta = chart.getDatasetMeta(0);
+        
+        meta.data.forEach((arc, index) => {
+          const value = dataset.data[index];
+          if (value > 0) {
+            // Calculate perfect geometric center of pie slice
+            const startAngle = arc.startAngle;
+            const endAngle = arc.endAngle;
+            const centerAngle = (startAngle + endAngle) / 2;
+            const radius = (arc.innerRadius + arc.outerRadius) / 2;
+            
+            // Position at 70% of radius for optimal visibility
+            const centerX = arc.x + Math.cos(centerAngle) * radius * 0.7;
+            const centerY = arc.y + Math.sin(centerAngle) * radius * 0.7;
+            
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Enhanced shadow for better visibility
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = 5;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            
+            ctx.fillText(value, centerX, centerY);
+            ctx.restore();
+          }
+        });
+      }
+    }]
+  });
+}
+
+function createPriorityPieChart(canvasId, data) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const categories = ['Partner', 'Sales', 'New User', 'Admin'];
+  let p1Total = 0, p2Total = 0, p3Total = 0;
+  
+  categories.forEach(cat => {
+    p1Total += data[cat].p1;
+    p2Total += data[cat].p2;
+    p3Total += data[cat].p3;
+  });
+
+  // Only show data that has values
+  const labels = [];
+  const chartData = [];
+  const colors = [];
+  
+  if (p1Total > 0) {
+    labels.push('P1');
+    chartData.push(p1Total);
+    colors.push('#dc3545');
+  }
+  if (p2Total > 0) {
+    labels.push('P2');
+    chartData.push(p2Total);
+    colors.push('#ffc107');
+  }
+  if (p3Total > 0) {
+    labels.push('P3');
+    chartData.push(p3Total);
+    colors.push('#28a745');
+  }
+
+  const pieData = {
+    labels: labels,
+    datasets: [{
+      data: chartData,
+      backgroundColor: colors,
+      borderColor: colors,
+      borderWidth: 2
+    }]
+  };
+
+  new Chart(ctx, {
+    type: 'pie',
+    data: pieData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const total = p1Total + p2Total + p3Total;
+              const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+              return `${context.label}: ${context.parsed} (${percentage}%)`;
+            }
+          }
+        }
+      },
+      animation: {
+        duration: 900,
+        easing: 'easeInOutQuart'
+      }
+    },
+    plugins: [{
+      id: 'perfectPieCenter',
+      afterDatasetsDraw: function(chart) {
+        const ctx = chart.ctx;
+        const dataset = chart.data.datasets[0];
+        const meta = chart.getDatasetMeta(0);
+        
+        meta.data.forEach((arc, index) => {
+          const value = dataset.data[index];
+          if (value > 0) {
+            // Calculate perfect geometric center of pie slice
+            const startAngle = arc.startAngle;
+            const endAngle = arc.endAngle;
+            const centerAngle = (startAngle + endAngle) / 2;
+            const radius = (arc.innerRadius + arc.outerRadius) / 2;
+            
+            // Position at 70% of radius for optimal visibility
+            const centerX = arc.x + Math.cos(centerAngle) * radius * 0.7;
+            const centerY = arc.y + Math.sin(centerAngle) * radius * 0.7;
+            
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Enhanced shadow for better visibility
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = 5;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            
+            ctx.fillText(value, centerX, centerY);
+            ctx.restore();
+          }
+        });
+      }
+    }]
   });
 }
 </script>
