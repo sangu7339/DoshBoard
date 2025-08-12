@@ -26,13 +26,24 @@
 
     .section-card { background: rgba(255,255,255,.95); border-radius: 15px; padding: 24px; margin: 24px 0; box-shadow: 0 8px 32px rgba(0,0,0,.1); }
     .section-title { text-align: center; color: #2c3e50; font-size: 1.5rem; margin-bottom: 18px; font-weight: 700; }
-    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(350px,1fr)); gap: 20px; }
+    
+    /* Updated charts grid for 2x2 layout */
+    .charts-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      grid-template-rows: 1fr 1fr; 
+      gap: 20px; 
+      max-width: 1200px; 
+      margin: 0 auto; 
+    }
+    
     .chart-card { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 8px 25px rgba(0,0,0,.08); }
     .chart-header { text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; color: #fff; font-weight: 700; font-size: 14px; }
     .dev-chart .chart-header { background: linear-gradient(45deg,#17a2b8,#138496); }
     .qa-chart .chart-header { background: linear-gradient(45deg,#ffc107,#e0a800); color: #333; }
-    .live-chart .chart-header { background: linear-gradient(45deg,#28a745,#1e7e34); }
-    .chart-container { height: 300px; position: relative; }
+    .live-items-chart .chart-header { background: linear-gradient(45deg,#28a745,#20c997); }
+    .previous-items-chart .chart-header { background: linear-gradient(45deg,#6c757d,#495057); }
+    .chart-container { height: 350px; position: relative; }
     .chart-stats { text-align: center; margin-top: 8px; padding-top: 8px; border-top: 2px solid #f1f3f5; color: #6c757d; font-weight: 600; font-size: 12px; }
 
     .data-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,.1); }
@@ -50,8 +61,11 @@
     @media (max-width:768px){
       .container{padding:10px;}
       .header h1{font-size:1.3rem;}
-      .chart-container{height:250px;}
-      .charts-grid { grid-template-columns: 1fr; }
+      .chart-container{height:280px;}
+      .charts-grid { 
+        grid-template-columns: 1fr; 
+        grid-template-rows: repeat(4, 1fr);
+      }
     }
   </style>
 </head>
@@ -71,7 +85,7 @@
 
   <!-- Charts Section -->
   <div class="section-card">
-    <div class="section-title">📊 Stacked Bar Charts - Each Bar Shows S1+S2+S3 or P1+P2+P3</div>
+    <div class="section-title">📊 Dashboard Charts - 2x2 Grid Layout</div>
     <div class="charts-grid">
       <div class="chart-card dev-chart">
         <div class="chart-header">🔧 Development: Each Bar = S1(red) + S2(yellow) + S3(green)</div>
@@ -80,15 +94,21 @@
       </div>
 
       <div class="chart-card qa-chart">
-        <div class="chart-header">🧪 QA</div>
+        <div class="chart-header">🧪 QA: Each Bar = P1(red) + P2(yellow) + P3(green)</div>
         <div class="chart-container"><canvas id="qaChart"></canvas></div>
         <div class="chart-stats">Total QA Items: <span id="qaTotal">0</span></div>
       </div>
 
-      <div class="chart-card live-chart">
-        <div class="chart-header">🔴 Combined: Each Bar = All S1+S2+S3+P1+P2+P3</div>
-        <div class="chart-container"><canvas id="totalChart"></canvas></div>
-        <div class="chart-stats">Total Items: <span id="grandTotal">0</span></div>
+      <div class="chart-card live-items-chart">
+        <div class="chart-header">🟢 Live Items: Current Production Issues</div>
+        <div class="chart-container"><canvas id="liveItemsChart"></canvas></div>
+        <div class="chart-stats">Total Live Items: <span id="liveItemsTotal">0</span></div>
+      </div>
+
+      <div class="chart-card previous-items-chart">
+        <div class="chart-header">🔵 Previous Items: Historical Issues</div>
+        <div class="chart-container"><canvas id="previousItemsChart"></canvas></div>
+        <div class="chart-stats">Total Previous Items: <span id="previousItemsTotal">0</span></div>
       </div>
     </div>
   </div>
@@ -156,11 +176,19 @@ function initializeCharts() {
   let qaSeverityData = {};
   let qaPriorityData = {};
   
+  // Live and Previous data structures
+  let liveItemsData = {};
+  let previousItemsData = {};
+  
   categories.forEach(cat => {
     devSeverityData[cat] = { s1: 0, s2: 0, s3: 0 };
     devPriorityData[cat] = { p1: 0, p2: 0, p3: 0 };
     qaSeverityData[cat] = { s1: 0, s2: 0, s3: 0 };
     qaPriorityData[cat] = { p1: 0, p2: 0, p3: 0 };
+    
+    // Initialize live and previous data
+    liveItemsData[cat] = { s1: 0, s2: 0, s3: 0 };
+    previousItemsData[cat] = { s1: 0, s2: 0, s3: 0 };
   });
 
   rows.forEach((row, index) => {
@@ -179,9 +207,13 @@ function initializeCharts() {
     const sales = cells[9].textContent.trim().toLowerCase();
     const inDev = cells[12].textContent.trim().toLowerCase();
     const inQA = cells[13].textContent.trim().toLowerCase();
+    
+    // Get live status from the "Live" column (index 11)
+    const liveStatus = cells[11].textContent.trim().toLowerCase();
+    const isLive = liveStatus === 'live';
 
     console.log(`Row ${index}:`, {
-      severity, priority, newUser, partner, admin, sales, inDev, inQA
+      severity, priority, newUser, partner, admin, sales, inDev, inQA, liveStatus, isLive
     });
 
     // Determine which categories this item belongs to
@@ -248,6 +280,25 @@ function initializeCharts() {
           qaPriorityData[category].p3++;
         }
       }
+
+      // Count Live and Previous items by severity
+      if (isLive) {
+        if (severity === 's1') {
+          liveItemsData[category].s1++;
+        } else if (severity === 's2') {
+          liveItemsData[category].s2++;
+        } else if (severity === 's3') {
+          liveItemsData[category].s3++;
+        }
+      } else {
+        if (severity === 's1') {
+          previousItemsData[category].s1++;
+        } else if (severity === 's2') {
+          previousItemsData[category].s2++;
+        } else if (severity === 's3') {
+          previousItemsData[category].s3++;
+        }
+      }
     });
   });
 
@@ -256,28 +307,38 @@ function initializeCharts() {
   console.log('Dev Priority Data:', devPriorityData);
   console.log('QA Severity Data:', qaSeverityData);
   console.log('QA Priority Data:', qaPriorityData);
+  console.log('Live Items Data:', liveItemsData);
+  console.log('Previous Items Data:', previousItemsData);
 
   // Calculate totals
-  let devTotal = 0, qaTotal = 0;
+  let devTotal = 0, qaTotal = 0, liveTotal = 0, previousTotal = 0;
   categories.forEach(cat => {
     const devCatTotal = devSeverityData[cat].s1 + devSeverityData[cat].s2 + devSeverityData[cat].s3;
     const qaCatTotal = qaSeverityData[cat].s1 + qaSeverityData[cat].s2 + qaSeverityData[cat].s3;
+    const liveCatTotal = liveItemsData[cat].s1 + liveItemsData[cat].s2 + liveItemsData[cat].s3;
+    const previousCatTotal = previousItemsData[cat].s1 + previousItemsData[cat].s2 + previousItemsData[cat].s3;
+    
     devTotal += devCatTotal;
     qaTotal += qaCatTotal;
-    console.log(`${cat}: Dev=${devCatTotal}, QA=${qaCatTotal}`);
+    liveTotal += liveCatTotal;
+    previousTotal += previousCatTotal;
+    
+    console.log(`${cat}: Dev=${devCatTotal}, QA=${qaCatTotal}, Live=${liveCatTotal}, Previous=${previousCatTotal}`);
   });
 
-  console.log(`Totals: Dev=${devTotal}, QA=${qaTotal}, Grand=${devTotal + qaTotal}`);
+  console.log(`Totals: Dev=${devTotal}, QA=${qaTotal}, Live=${liveTotal}, Previous=${previousTotal}`);
 
   // Update totals in UI
   setText('devTotal', devTotal);
   setText('qaTotal', qaTotal);
-  setText('grandTotal', devTotal + qaTotal);
+  setText('liveItemsTotal', liveTotal);
+  setText('previousItemsTotal', previousTotal);
 
-  // Create charts with actual data
+  // Create 4 charts in 2x2 grid
   createStackedSeverityChart('devChart', 'Development Items by Severity', devSeverityData);
   createStackedPriorityChart('qaChart', 'QA Items by Priority', qaPriorityData);
-  createCombinedStackedChart('totalChart', devSeverityData, devPriorityData, qaSeverityData, qaPriorityData);
+  createStackedSeverityChart('liveItemsChart', 'Live Items by Severity', liveItemsData);
+  createStackedSeverityChart('previousItemsChart', 'Previous Items by Severity', previousItemsData);
 }
 
 function setText(id, value) {
@@ -415,118 +476,6 @@ function createStackedPriorityChart(canvasId, title, data) {
   ];
 
   console.log(`Creating ${canvasId} with data:`, datasets);
-
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: categories,
-      datasets: datasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          stacked: true,
-          grid: { display: false }
-        },
-        y: {
-          stacked: true,
-          beginAtZero: true,
-          ticks: { 
-            stepSize: 1, 
-            callback: (v) => Number.isInteger(v) ? v : ''
-          },
-          grid: { color: '#e9ecef' }
-        }
-      },
-      plugins: {
-        legend: { 
-          display: true,
-          position: 'top'
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-          callbacks: {
-            title: (tooltipItems) => {
-              return `${tooltipItems[0].label} Category`;
-            },
-            label: (context) => {
-              return `${context.dataset.label}: ${context.parsed.y} items`;
-            },
-            footer: (tooltipItems) => {
-              const total = tooltipItems.reduce((sum, item) => sum + item.parsed.y, 0);
-              return `Total for ${tooltipItems[0].label}: ${total} items`;
-            }
-          }
-        }
-      },
-      animation: { 
-        duration: 900, 
-        easing: 'easeInOutQuart' 
-      }
-    }
-  });
-}
-
-function createCombinedStackedChart(canvasId, devSeverityData, devPriorityData, qaSeverityData, qaPriorityData) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) {
-    console.log(`Canvas ${canvasId} not found`);
-    return;
-  }
-  const ctx = canvas.getContext('2d');
-
-  const categories = ['Partner', 'Sales', 'New User', 'Admin'];
-  
-  // Combine all data for comprehensive stacked view
-  const datasets = [
-    {
-      label: 'Dev S1 (Critical)',
-      data: categories.map(cat => devSeverityData[cat].s1),
-      backgroundColor: '#dc3545',
-      borderColor: '#dc3545',
-      borderWidth: 1
-    },
-    {
-      label: 'Dev S2 (High)',
-      data: categories.map(cat => devSeverityData[cat].s2),
-      backgroundColor: '#fd7e14',
-      borderColor: '#fd7e14',
-      borderWidth: 1
-    },
-    {
-      label: 'Dev S3 (Medium)',
-      data: categories.map(cat => devSeverityData[cat].s3),
-      backgroundColor: '#ffc107',
-      borderColor: '#ffc107',
-      borderWidth: 1
-    },
-    {
-      label: 'QA S1 (Critical)',
-      data: categories.map(cat => qaSeverityData[cat].s1),
-      backgroundColor: '#6f42c1',
-      borderColor: '#6f42c1',
-      borderWidth: 1
-    },
-    {
-      label: 'QA S2 (High)',
-      data: categories.map(cat => qaSeverityData[cat].s2),
-      backgroundColor: '#0dcaf0',
-      borderColor: '#0dcaf0',
-      borderWidth: 1
-    },
-    {
-      label: 'QA S3 (Medium)',
-      data: categories.map(cat => qaSeverityData[cat].s3),
-      backgroundColor: '#28a745',
-      borderColor: '#28a745',
-      borderWidth: 1
-    }
-  ];
-
-  console.log(`Creating ${canvasId} with combined data:`, datasets);
 
   new Chart(ctx, {
     type: 'bar',

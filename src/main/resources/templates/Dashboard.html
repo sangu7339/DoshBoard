@@ -19,7 +19,7 @@
 
         <!-- Charts Section -->
         <div class="row mb-4">
-            <div class="col-lg-4 col-md-6 mb-3">
+            <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card h-100">
                     <div class="card-header bg-info text-white">
                         <h5>🔧 Development Status</h5>
@@ -29,7 +29,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6 mb-3">
+            <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card h-100">
                     <div class="card-header bg-warning text-dark">
                         <h5>🧪 QA Status</h5>
@@ -39,13 +39,25 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6 mb-3">
+            <!-- Separate Live Chart -->
+            <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card h-100">
                     <div class="card-header bg-success text-white">
-                        <h5>🔴 Live Status</h5>
+                        <h5>🔴 Live Items</h5>
                     </div>
                     <div class="card-body">
                         <canvas id="liveChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Separate Previous Chart -->
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-secondary text-white">
+                        <h5>⚫ Previous Items</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="previousChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -64,7 +76,7 @@
             </div>
             <div class="col-lg-6 col-md-12 mb-3">
                 <div class="card h-100">
-                    <div class="card-header bg-secondary text-white">
+                    <div class="card-header bg-dark text-white">
                         <h5>📋 Priority Distribution</h5>
                     </div>
                     <div class="card-body">
@@ -118,29 +130,29 @@
                         <div class="col-lg-3 col-md-6 mb-3">
                             <label class="form-label">New User</label>
                             <select class="form-control" th:field="*{newUser}">
-                                <option value="Applicable">Applicable</option>
-                                <option value="Not Applicable">Not Applicable</option>
+                                <option value="no">Not Applicable</option>
+                                <option value="yes">Applicable</option>
                             </select>
                         </div>
                         <div class="col-lg-3 col-md-6 mb-3">
                             <label class="form-label">Partner</label>
                             <select class="form-control" th:field="*{partner}">
-                                <option value="Applicable">Applicable</option>
-                                <option value="Not Applicable">Not Applicable</option>
+                                <option value="no">Not Applicable</option>
+                                <option value="yes">Applicable</option>
                             </select>
                         </div>
                         <div class="col-lg-3 col-md-6 mb-3">
                             <label class="form-label">Admin</label>
                             <select class="form-control" th:field="*{admin}">
-                                <option value="Applicable">Applicable</option>
-                                <option value="Not Applicable">Not Applicable</option>
+                                <option value="no">Not Applicable</option>
+                                <option value="yes">Applicable</option>
                             </select>
                         </div>
                         <div class="col-lg-3 col-md-6 mb-3">
                             <label class="form-label">Sales</label>
                             <select class="form-control" th:field="*{sales}">
-                                <option value="Applicable">Applicable</option>
-                                <option value="Not Applicable">Not Applicable</option>
+                                <option value="no">Not Applicable</option>
+                                <option value="yes">Applicable</option>
                             </select>
                         </div>
                     </div>
@@ -322,10 +334,156 @@
         const severityStats = /*[[${severityStats}]]*/ {};
         const priorityStats = /*[[${priorityStats}]]*/ {};
         
+        // Calculate separate stats for Live and Previous items
+        const dashboardItems = /*[[${dashboardItems}]]*/ [];
+        const { liveItemsStats, previousItemsStats } = calculateSeparateStats(dashboardItems);
+        
         // Initialize charts when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initializeCharts(devStats, qaStats, liveStats, severityStats, priorityStats);
+            initializeLiveChart(liveItemsStats);
+            initializePreviousChart(previousItemsStats);
         });
+
+        // Function to calculate separate statistics for Live and Previous items
+        function calculateSeparateStats(items) {
+            if (!items || items.length === 0) {
+                return {
+                    liveItemsStats: { total: 0, s1: 0, s2: 0, s3: 0, p1: 0, p2: 0, p3: 0, newUser: 0, partner: 0, admin: 0, sales: 0 },
+                    previousItemsStats: { total: 0, s1: 0, s2: 0, s3: 0, p1: 0, p2: 0, p3: 0, newUser: 0, partner: 0, admin: 0, sales: 0 }
+                };
+            }
+
+            const liveItemsStats = { total: 0, s1: 0, s2: 0, s3: 0, p1: 0, p2: 0, p3: 0, newUser: 0, partner: 0, admin: 0, sales: 0 };
+            const previousItemsStats = { total: 0, s1: 0, s2: 0, s3: 0, p1: 0, p2: 0, p3: 0, newUser: 0, partner: 0, admin: 0, sales: 0 };
+
+            items.forEach(item => {
+                const stats = item.live ? liveItemsStats : previousItemsStats;
+                stats.total++;
+
+                // Count by severity
+                if (item.severity) {
+                    const severity = item.severity.toLowerCase();
+                    if (severity.includes('s1') || severity.includes('critical')) stats.s1++;
+                    else if (severity.includes('s2') || severity.includes('high')) stats.s2++;
+                    else if (severity.includes('s3') || severity.includes('medium')) stats.s3++;
+                }
+
+                // Count by priority
+                if (item.priority) {
+                    const priority = item.priority.toLowerCase();
+                    if (priority.includes('p1') || priority.includes('high')) stats.p1++;
+                    else if (priority.includes('p2') || priority.includes('medium')) stats.p2++;
+                    else if (priority.includes('p3') || priority.includes('low')) stats.p3++;
+                }
+
+                // Count categories
+                if (item.newUser && (item.newUser.toLowerCase() === 'applicable' || item.newUser === 'yes')) stats.newUser++;
+                if (item.partner && (item.partner.toLowerCase() === 'applicable' || item.partner === 'yes')) stats.partner++;
+                if (item.admin && (item.admin.toLowerCase() === 'applicable' || item.admin === 'yes')) stats.admin++;
+                if (item.sales && (item.sales.toLowerCase() === 'applicable' || item.sales === 'yes')) stats.sales++;
+            });
+
+            return { liveItemsStats, previousItemsStats };
+        }
+
+        // Function to initialize the Live Items chart
+        function initializeLiveChart(stats) {
+            const ctx = document.getElementById('liveChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['S1 (Critical)', 'S2 (High)', 'S3 (Medium)', 'P1 (High)', 'P2 (Medium)', 'P3 (Low)', 'New User', 'Partner', 'Admin', 'Sales'],
+                    datasets: [{
+                        data: [stats.s1, stats.s2, stats.s3, stats.p1, stats.p2, stats.p3, stats.newUser, stats.partner, stats.admin, stats.sales],
+                        backgroundColor: [
+                            '#dc3545', // S1 - Red
+                            '#ffc107', // S2 - Yellow
+                            '#28a745', // S3 - Green
+                            '#dc3545', // P1 - Red
+                            '#ffc107', // P2 - Yellow
+                            '#28a745', // P3 - Green
+                            '#17a2b8', // New User - Cyan
+                            '#6f42c1', // Partner - Purple
+                            '#fd7e14', // Admin - Orange
+                            '#20c997'  // Sales - Teal
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 10,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `Total Live Items: ${stats.total}`
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to initialize the Previous Items chart
+        function initializePreviousChart(stats) {
+            const ctx = document.getElementById('previousChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['S1 (Critical)', 'S2 (High)', 'S3 (Medium)', 'P1 (High)', 'P2 (Medium)', 'P3 (Low)', 'New User', 'Partner', 'Admin', 'Sales'],
+                    datasets: [{
+                        data: [stats.s1, stats.s2, stats.s3, stats.p1, stats.p2, stats.p3, stats.newUser, stats.partner, stats.admin, stats.sales],
+                        backgroundColor: [
+                            '#6c757d', // S1 - Gray
+                            '#adb5bd', // S2 - Light Gray
+                            '#495057', // S3 - Dark Gray
+                            '#6c757d', // P1 - Gray
+                            '#adb5bd', // P2 - Light Gray
+                            '#495057', // P3 - Dark Gray
+                            '#868e96', // New User - Medium Gray
+                            '#6c757d', // Partner - Gray
+                            '#adb5bd', // Admin - Light Gray
+                            '#495057'  // Sales - Dark Gray
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 10,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `Total Previous Items: ${stats.total}`
+                        }
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>
