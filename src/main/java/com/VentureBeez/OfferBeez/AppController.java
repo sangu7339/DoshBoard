@@ -37,11 +37,10 @@ public class AppController {
         List<OfferBeezDoshBoard> liveItems = allItems.stream().filter(OfferBeezDoshBoard::isLive).toList();
         List<OfferBeezDoshBoard> previousItems = allItems.stream().filter(i -> !i.isLive()).toList();
 
-        // **KEY FIX**: Pass ALL items to the dashboard, not just filtered ones
-        // The JavaScript needs to see all data to count properly by categories
+        // Pass normalized data for charts
         List<OfferBeezDoshBoard> normalizedItems = normalizeDataForCharts(allItems);
 
-        model.addAttribute("devItems", normalizedItems); // Changed from devItems to allItems
+        model.addAttribute("devItems", normalizedItems);
         model.addAttribute("qaItems", qaItems);
         model.addAttribute("liveItems", liveItems);
         model.addAttribute("previousItems", previousItems);
@@ -73,11 +72,11 @@ public class AppController {
             String severity = item.getSeverity();
             if (severity != null) {
                 severity = severity.toLowerCase().trim();
-                if (severity.contains("critical") || severity.contains("high") && severity.contains("1")) {
+                if (severity.contains("critical") || (severity.contains("high") && severity.contains("1")) || severity.equals("s1")) {
                     severity = "s1";
-                } else if (severity.contains("high") || severity.contains("medium") && severity.contains("2")) {
+                } else if (severity.contains("high") || (severity.contains("medium") && severity.contains("2")) || severity.equals("s2")) {
                     severity = "s2";
-                } else if (severity.contains("medium") || severity.contains("low") || severity.contains("normal")) {
+                } else if (severity.contains("medium") || severity.contains("low") || severity.contains("normal") || severity.equals("s3")) {
                     severity = "s3";
                 }
             }
@@ -87,17 +86,17 @@ public class AppController {
             String priority = item.getPriority();
             if (priority != null) {
                 priority = priority.toLowerCase().trim();
-                if (priority.contains("urgent") || priority.contains("critical") || priority.contains("1")) {
+                if (priority.contains("urgent") || priority.contains("critical") || priority.contains("1") || priority.equals("p1")) {
                     priority = "p1";
-                } else if (priority.contains("high") || priority.contains("2")) {
+                } else if (priority.contains("high") || priority.contains("2") || priority.equals("p2")) {
                     priority = "p2";
-                } else if (priority.contains("normal") || priority.contains("low") || priority.contains("medium") || priority.contains("3")) {
+                } else if (priority.contains("normal") || priority.contains("low") || priority.contains("medium") || priority.contains("3") || priority.equals("p3")) {
                     priority = "p3";
                 }
             }
             normalized.setPriority(priority);
             
-            // Convert boolean/other values to yes/no format
+            // Convert boolean/other values to yes/no format for charts
             normalized.setNewUser(convertToYesNo(item.getNewUser()));
             normalized.setPartner(convertToYesNo(item.getPartner()));
             normalized.setAdmin(convertToYesNo(item.getAdmin()));
@@ -107,10 +106,10 @@ public class AppController {
             normalized.setLive(item.isLive());
             
             // Normalize status values to lowercase
-            normalized.setInDev(item.getInDev() != null ? item.getInDev().toLowerCase() : "");
-            normalized.setInQA(item.getInQA() != null ? item.getInQA().toLowerCase() : "");
-            normalized.setReopen(item.getReopen());
-            normalized.setVerifyAndClosed(item.getVerifyAndClosed());
+            normalized.setInDev(item.getInDev() != null ? item.getInDev().toLowerCase() : "open");
+            normalized.setInQA(item.getInQA() != null ? item.getInQA().toLowerCase() : "open");
+            normalized.setReopen(item.getReopen() != null ? item.getReopen().toLowerCase() : "no");
+            normalized.setVerifyAndClosed(item.getVerifyAndClosed() != null ? item.getVerifyAndClosed().toLowerCase() : "pending");
             normalized.setRemarks(item.getRemarks());
             
             return normalized;
@@ -118,7 +117,7 @@ public class AppController {
     }
 
     /**
-     * Convert various boolean representations to yes/no
+     * Convert various boolean representations to yes/no for chart processing
      */
     private String convertToYesNo(String value) {
         if (value == null || value.trim().isEmpty()) {
@@ -126,13 +125,43 @@ public class AppController {
         }
         
         String lowerValue = value.toLowerCase().trim();
-        return ("true".equals(lowerValue) || "1".equals(lowerValue) || "yes".equals(lowerValue) || "y".equals(lowerValue)) 
+        return ("true".equals(lowerValue) || "1".equals(lowerValue) || "yes".equals(lowerValue) || 
+                "y".equals(lowerValue) || "applicable".equals(lowerValue)) 
                 ? "yes" : "no";
+    }
+
+    /**
+     * Convert form values to proper storage format
+     */
+    private String convertToStorageFormat(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return "Not Applicable";
+        }
+        
+        String lowerValue = value.toLowerCase().trim();
+        if ("yes".equals(lowerValue) || "true".equals(lowerValue) || "1".equals(lowerValue) || "applicable".equals(lowerValue)) {
+            return "Applicable";
+        } else {
+            return "Not Applicable";
+        }
     }
 
     @GetMapping("/add")
     public String addForm(Model model) {
-        model.addAttribute("item", new OfferBeezDoshBoard());
+        OfferBeezDoshBoard item = new OfferBeezDoshBoard();
+        // Set default values to prevent null issues
+        item.setNewUser("no");
+        item.setPartner("no");
+        item.setAdmin("no");
+        item.setSales("no");
+        item.setInDev("open");
+        item.setInQA("open");
+        item.setReopen("no");
+        item.setVerifyAndClosed("pending");
+        item.setStatus("In Dev");
+        item.setLive(true);
+        
+        model.addAttribute("item", item);
         return "add";
     }
 
@@ -141,16 +170,29 @@ public class AppController {
         // Ensure new item goes LIVE
         item.setLive(true);
         item.setStatus("Completed");
+        
+        // Set default values for development status fields
         if (item.getInDev() == null || item.getInDev().isBlank()) item.setInDev("pass");
         if (item.getInQA() == null || item.getInQA().isBlank()) item.setInQA("pass");
         if (item.getVerifyAndClosed() == null || item.getVerifyAndClosed().isBlank()) item.setVerifyAndClosed("pass");
         if (item.getReopen() == null || item.getReopen().isBlank()) item.setReopen("no");
 
-        // Ensure category fields are set properly
-        if (item.getNewUser() == null || item.getNewUser().isBlank()) item.setNewUser("no");
-        if (item.getPartner() == null || item.getPartner().isBlank()) item.setPartner("no");
-        if (item.getAdmin() == null || item.getAdmin().isBlank()) item.setAdmin("no");
-        if (item.getSales() == null || item.getSales().isBlank()) item.setSales("no");
+        // Handle category fields - convert form values to storage format
+        item.setNewUser(convertToStorageFormat(item.getNewUser()));
+        item.setPartner(convertToStorageFormat(item.getPartner()));
+        item.setAdmin(convertToStorageFormat(item.getAdmin()));
+        item.setSales(convertToStorageFormat(item.getSales()));
+
+        // Ensure required fields are not null
+        if (item.getProject() == null || item.getProject().trim().isEmpty()) {
+            item.setProject("Unknown Project");
+        }
+        if (item.getBugNumber() == null || item.getBugNumber().trim().isEmpty()) {
+            item.setBugNumber("AUTO-" + System.currentTimeMillis());
+        }
+        if (item.getIssue() == null || item.getIssue().trim().isEmpty()) {
+            item.setIssue("No description provided");
+        }
 
         appServices.saveItem(item);
         return "redirect:/?action=added";
@@ -160,6 +202,20 @@ public class AppController {
     public String editForm(@PathVariable int id, Model model) {
         OfferBeezDoshBoard item = appServices.getItemById(id);
         if (item == null) return "redirect:/";
+        
+        // Convert storage format back to form format for editing
+        if ("Applicable".equals(item.getNewUser())) item.setNewUser("yes");
+        else item.setNewUser("no");
+        
+        if ("Applicable".equals(item.getPartner())) item.setPartner("yes");
+        else item.setPartner("no");
+        
+        if ("Applicable".equals(item.getAdmin())) item.setAdmin("yes");
+        else item.setAdmin("no");
+        
+        if ("Applicable".equals(item.getSales())) item.setSales("yes");
+        else item.setSales("no");
+        
         model.addAttribute("item", item);
         return "update";
     }
@@ -196,11 +252,11 @@ public class AppController {
         if (item.getInQA() == null || item.getInQA().isBlank()) item.setInQA("pass");
         if (item.getVerifyAndClosed() == null || item.getVerifyAndClosed().isBlank()) item.setVerifyAndClosed("pass");
 
-        // Ensure category fields are set properly
-        if (item.getNewUser() == null || item.getNewUser().isBlank()) item.setNewUser("no");
-        if (item.getPartner() == null || item.getPartner().isBlank()) item.setPartner("no");
-        if (item.getAdmin() == null || item.getAdmin().isBlank()) item.setAdmin("no");
-        if (item.getSales() == null || item.getSales().isBlank()) item.setSales("no");
+        // Handle category fields - convert form values to storage format
+        item.setNewUser(convertToStorageFormat(item.getNewUser()));
+        item.setPartner(convertToStorageFormat(item.getPartner()));
+        item.setAdmin(convertToStorageFormat(item.getAdmin()));
+        item.setSales(convertToStorageFormat(item.getSales()));
 
         appServices.updateItem(item);
         return "redirect:/?action=updated";
