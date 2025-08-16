@@ -139,12 +139,12 @@
             <strong>Debug Info:</strong> Loading chart data...
         </div>
 
-        <!-- Total Issues Chart (Full Width) -->
+        <!-- Total Live Issues Chart (Full Width) -->
         <div class="charts-row">
             <div class="chart-container total-chart">
-                <h3>📈 Total Issues Overview - All Stages Combined</h3>
+                <h3>🔥 Total Live Issues (Dev + QA) - Stacked Severity & Priority</h3>
                 <div class="chart-wrapper">
-                    <canvas id="totalChart"></canvas>
+                    <canvas id="totalLiveChart"></canvas>
                 </div>
             </div>
         </div>
@@ -152,19 +152,19 @@
         <!-- Stage-Specific Charts -->
         <div class="charts-row">
             <div class="chart-container">
-                <h3>📊 In Development - Severity & Priority by User Type</h3>
+                <h3>📊 In Development - Stacked Severity & Priority</h3>
                 <div class="chart-wrapper">
                     <canvas id="inDevChart"></canvas>
                 </div>
             </div>
             <div class="chart-container">
-                <h3>🔍 In QA - Severity & Priority by User Type</h3>
+                <h3>🔍 In QA - Stacked Severity & Priority</h3>
                 <div class="chart-wrapper">
                     <canvas id="inQAChart"></canvas>
                 </div>
             </div>
             <div class="chart-container">
-                <h3>✅ Resolved - Severity & Priority by User Type</h3>
+                <h3>✅ Resolved - Stacked Severity & Priority</h3>
                 <div class="chart-wrapper">
                     <canvas id="resolvedChart"></canvas>
                 </div>
@@ -173,335 +173,335 @@
 
         <script th:inline="javascript">
             /*<![CDATA[*/
-            var chartData = /*[[${chartData}]]*/ {};
-            var totalChartData = /*[[${totalChartData}]]*/ {};
+            // Enhanced data handling with null checks
+            var chartData = /*[[${chartData}]]*/ null;
+            var totalChartData = /*[[${totalChartData}]]*/ null;
             
+            // Debug output
             console.log("=== CHART DATA ANALYSIS ===");
-            console.log("Received chartData:", chartData);
-            console.log("Received totalChartData:", totalChartData);
-            console.log("Has stageData:", !!(chartData && chartData.stageData));
-            console.log("Has totalData:", !!(totalChartData && totalChartData.total));
+            console.log("Chart Data:", chartData);
+            console.log("Total Chart Data:", totalChartData);
             
             // Update debug info
             document.getElementById('debugInfo').innerHTML = 
-                '<strong>Debug Info:</strong> Chart data loaded - Has stageData: ' + 
-                (!!(chartData && chartData.stageData)) + 
-                ', Has totalData: ' + (!!(totalChartData && totalChartData.total)) +
+                '<strong>Debug Info:</strong> Chart data loaded - ' + 
+                (chartData ? 'Has chart data' : 'No chart data') + 
+                ', ' + (totalChartData ? 'Has total data' : 'No total data') +
                 ' | <a href="/debug-chart" target="_blank">View Raw Data</a>';
+            document.getElementById('debugInfo').style.display = 'block';
 
-            // Create Total Issues Chart
-            function createTotalChart() {
-                var canvas = document.getElementById('totalChart');
-                if (!canvas) {
-                    console.error('Total chart canvas not found');
-                    return;
+            // Industry-standard color scheme for severity and priority
+            const chartColors = {
+                severity: {
+                    S1: { bg: 'rgba(220, 53, 69, 0.8)', border: 'rgba(220, 53, 69, 1)' },      // Red
+                    S2: { bg: 'rgba(253, 126, 20, 0.8)', border: 'rgba(253, 126, 20, 1)' },    // Orange
+                    S3: { bg: 'rgba(255, 193, 7, 0.8)', border: 'rgba(255, 193, 7, 1)' }       // Yellow
+                },
+                priority: {
+                    P1: { bg: 'rgba(111, 66, 193, 0.8)', border: 'rgba(111, 66, 193, 1)' },    // Purple
+                    P2: { bg: 'rgba(13, 110, 253, 0.8)', border: 'rgba(13, 110, 253, 1)' },    // Blue
+                    P3: { bg: 'rgba(32, 201, 151, 0.8)', border: 'rgba(32, 201, 151, 1)' }     // Teal
                 }
+            };
+
+            // Data normalization with fallbacks
+            function normalizeData(data) {
+                if (!data) return null;
                 
-                var ctx = canvas.getContext('2d');
+                const defaultValues = {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                const users = ['admin', 'newUser', 'sales', 'partner'];
                 
-                if (!totalChartData || !totalChartData.total) {
-                    console.warn('No total chart data available');
-                    canvas.parentNode.innerHTML = '<div class="no-data-message">No total data available<br><small>Add some bugs to see total analytics</small></div>';
-                    return;
-                }
-                
-                var data = totalChartData.total;
-                var adminData = data.admin || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
-                var newUserData = data.newUser || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
-                var salesData = data.sales || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
-                var partnerData = data.partner || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
-                
-                console.log("Total chart data:");
-                console.log("Admin:", adminData);
-                console.log("NewUser:", newUserData);
-                console.log("Sales:", salesData);
-                console.log("Partner:", partnerData);
-                
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Admin', 'New User', 'Sales', 'Partner'],
-                        datasets: [
-                            {
-                                label: 'S1 (Critical)',
-                                data: [adminData.S1, newUserData.S1, salesData.S1, partnerData.S1],
-                                backgroundColor: '#dc3545',
-                                borderColor: '#b02a37',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'S2 (Major)',
-                                data: [adminData.S2, newUserData.S2, salesData.S2, partnerData.S2],
-                                backgroundColor: '#fd7e14',
-                                borderColor: '#dc6a02',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'S3 (Minor)',
-                                data: [adminData.S3, newUserData.S3, salesData.S3, partnerData.S3],
-                                backgroundColor: '#28a745',
-                                borderColor: '#1e7e34',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'P1 (High)',
-                                data: [adminData.P1, newUserData.P1, salesData.P1, partnerData.P1],
-                                backgroundColor: '#6f42c1',
-                                borderColor: '#5a359a',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'P2 (Medium)',
-                                data: [adminData.P2, newUserData.P2, salesData.P2, partnerData.P2],
-                                backgroundColor: '#20c997',
-                                borderColor: '#17a085',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'P3 (Low)',
-                                data: [adminData.P3, newUserData.P3, salesData.P3, partnerData.P3],
-                                backgroundColor: '#6c757d',
-                                borderColor: '#545b62',
-                                borderWidth: 1,
-                                borderRadius: 3
+                users.forEach(user => {
+                    if (!data[user]) {
+                        data[user] = {...defaultValues};
+                    } else {
+                        Object.keys(defaultValues).forEach(key => {
+                            if (data[user][key] === undefined || data[user][key] === null) {
+                                data[user][key] = 0;
                             }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'bottom',
-                                labels: {
-                                    font: { size: 11 },
-                                    padding: 15,
-                                    usePointStyle: true
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0,0,0,0.8)',
-                                titleFont: { size: 12, weight: 'bold' },
-                                bodyFont: { size: 11 },
-                                callbacks: {
-                                    title: function(context) {
-                                        return context[0].label + ' Users - Total Issues';
-                                    },
-                                    label: function(context) {
-                                        var label = context.dataset.label;
-                                        var value = context.parsed.y;
-                                        var type = label.startsWith('S') ? 'Severity' : 'Priority';
-                                        return type + ' ' + label + ': ' + value + ' total issue' + 
-                                               (value !== 1 ? 's' : '');
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: { precision: 0, font: { size: 10 } },
-                                grid: { color: 'rgba(0,0,0,0.1)' }
-                            },
-                            x: {
-                                ticks: { font: { size: 10, weight: 'bold' } },
-                                grid: { display: false }
-                            }
-                        }
+                        });
                     }
                 });
                 
-                console.log("✅ Total chart created successfully");
+                return data;
             }
 
-            function createUserTypeChart(canvasId, stageData, title, stageName) {
-                console.log("Creating chart for:", canvasId, "with stage:", stageName);
-                console.log("Stage data received:", stageData);
+            // Function to combine Dev + QA data for Total Live Issues
+            function combineLiveData(devData, qaData) {
+                if (!devData && !qaData) return null;
                 
-                var canvas = document.getElementById(canvasId);
+                const defaultValues = {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                const users = ['admin', 'newUser', 'sales', 'partner'];
+                const combinedData = {};
+                
+                users.forEach(user => {
+                    combinedData[user] = {...defaultValues};
+                    
+                    // Add Dev data
+                    if (devData && devData[user]) {
+                        Object.keys(defaultValues).forEach(key => {
+                            combinedData[user][key] += devData[user][key] || 0;
+                        });
+                    }
+                    
+                    // Add QA data
+                    if (qaData && qaData[user]) {
+                        Object.keys(defaultValues).forEach(key => {
+                            combinedData[user][key] += qaData[user][key] || 0;
+                        });
+                    }
+                });
+                
+                return combinedData;
+            }
+
+            // Create stacked datasets - S1+S2+S3 in one stack, P1+P2+P3 in another stack
+            function createCombinedDatasets(data) {
+                if (!data) return [];
+                
+                return [
+                    // Severity Stack - S1 (bottom layer)
+                    {
+                        label: 'S1 (Critical)',
+                        data: [data.admin?.S1||0, data.newUser?.S1||0, data.sales?.S1||0, data.partner?.S1||0],
+                        backgroundColor: chartColors.severity.S1.bg,
+                        borderColor: chartColors.severity.S1.border,
+                        borderWidth: 1,
+                        stack: 'severity'
+                    },
+                    // Severity Stack - S2 (middle layer)
+                    {
+                        label: 'S2 (Major)',
+                        data: [data.admin?.S2||0, data.newUser?.S2||0, data.sales?.S2||0, data.partner?.S2||0],
+                        backgroundColor: chartColors.severity.S2.bg,
+                        borderColor: chartColors.severity.S2.border,
+                        borderWidth: 1,
+                        stack: 'severity'
+                    },
+                    // Severity Stack - S3 (top layer)
+                    {
+                        label: 'S3 (Minor)',
+                        data: [data.admin?.S3||0, data.newUser?.S3||0, data.sales?.S3||0, data.partner?.S3||0],
+                        backgroundColor: chartColors.severity.S3.bg,
+                        borderColor: chartColors.severity.S3.border,
+                        borderWidth: 1,
+                        stack: 'severity'
+                    },
+                    // Priority Stack - P1 (bottom layer)
+                    {
+                        label: 'P1 (Critical)',
+                        data: [data.admin?.P1||0, data.newUser?.P1||0, data.sales?.P1||0, data.partner?.P1||0],
+                        backgroundColor: chartColors.priority.P1.bg,
+                        borderColor: chartColors.priority.P1.border,
+                        borderWidth: 1,
+                        stack: 'priority'
+                    },
+                    // Priority Stack - P2 (middle layer)
+                    {
+                        label: 'P2 (High)',
+                        data: [data.admin?.P2||0, data.newUser?.P2||0, data.sales?.P2||0, data.partner?.P2||0],
+                        backgroundColor: chartColors.priority.P2.bg,
+                        borderColor: chartColors.priority.P2.border,
+                        borderWidth: 1,
+                        stack: 'priority'
+                    },
+                    // Priority Stack - P3 (top layer)
+                    {
+                        label: 'P3 (Medium)',
+                        data: [data.admin?.P3||0, data.newUser?.P3||0, data.sales?.P3||0, data.partner?.P3||0],
+                        backgroundColor: chartColors.priority.P3.bg,
+                        borderColor: chartColors.priority.P3.border,
+                        borderWidth: 1,
+                        stack: 'priority'
+                    }
+                ];
+            }
+
+            // Chart initialization with error handling
+            function initChart(canvasId, rawData, title) {
+                const canvas = document.getElementById(canvasId);
                 if (!canvas) {
-                    console.error('Canvas element not found:', canvasId);
+                    console.error(`Canvas not found: ${canvasId}`);
                     return;
                 }
                 
-                var ctx = canvas.getContext('2d');
+                // Clear previous instance
+                if (window[`${canvasId}Instance`]) {
+                    window[`${canvasId}Instance`].destroy();
+                }
                 
-                // Initialize with empty data structure including priority
-                var defaultData = {
-                    admin: {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0},
-                    newUser: {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0},
-                    sales: {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0},
-                    partner: {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0}
-                };
+                const container = canvas.parentNode;
+                const normalizedData = normalizeData(rawData);
                 
-                // Use real data if available, otherwise use defaults
-                var data = stageData || defaultData;
+                if (!normalizedData) {
+                    container.innerHTML = `
+                        <div class="no-data-message">
+                            📊 No data available
+                            <br><small style="margin-top:10px;display:block;">Add bugs to see stacked severity & priority</small>
+                        </div>
+                    `;
+                    return;
+                }
                 
-                // Safely extract data with null checks
-                var adminData = data.admin || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
-                var newUserData = data.newUser || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
-                var salesData = data.sales || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
-                var partnerData = data.partner || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                // Check if there's any data to display
+                const datasets = createCombinedDatasets(normalizedData);
+                const hasData = datasets.some(dataset => 
+                    dataset.data.some(value => value > 0)
+                );
                 
-                // Calculate if we have any data to show (both severity and priority)
-                var hasData = (adminData.S1 + adminData.S2 + adminData.S3 + adminData.P1 + adminData.P2 + adminData.P3 +
-                              newUserData.S1 + newUserData.S2 + newUserData.S3 + newUserData.P1 + newUserData.P2 + newUserData.P3 +
-                              salesData.S1 + salesData.S2 + salesData.S3 + salesData.P1 + salesData.P2 + salesData.P3 +
-                              partnerData.S1 + partnerData.S2 + partnerData.S3 + partnerData.P1 + partnerData.P2 + partnerData.P3) > 0;
-                
-                console.log("Chart data for", stageName, ":");
-                console.log("  Admin:", adminData);
-                console.log("  NewUser:", newUserData);
-                console.log("  Sales:", salesData);
-                console.log("  Partner:", partnerData);
-                console.log("  Has data:", hasData);
-                
-                // If no data, show a message instead of empty chart
                 if (!hasData) {
-                    var chartWrapper = canvas.parentNode;
-                    chartWrapper.innerHTML = '<div class="no-data-message">No bugs in ' + stageName + ' stage</div>';
+                    container.innerHTML = `
+                        <div class="no-data-message">
+                            📊 No issues found
+                            <br><small style="margin-top:10px;display:block;">This stage has no bugs to display</small>
+                        </div>
+                    `;
                     return;
                 }
                 
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Admin', 'New User', 'Sales', 'Partner'],
-                        datasets: [
-                            {
-                                label: 'S1 (Critical)',
-                                data: [adminData.S1, newUserData.S1, salesData.S1, partnerData.S1],
-                                backgroundColor: '#dc3545',
-                                borderColor: '#b02a37',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'S2 (Major)',
-                                data: [adminData.S2, newUserData.S2, salesData.S2, partnerData.S2],
-                                backgroundColor: '#fd7e14',
-                                borderColor: '#dc6a02',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'S3 (Minor)',
-                                data: [adminData.S3, newUserData.S3, salesData.S3, partnerData.S3],
-                                backgroundColor: '#28a745',
-                                borderColor: '#1e7e34',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'P1 (High)',
-                                data: [adminData.P1, newUserData.P1, salesData.P1, partnerData.P1],
-                                backgroundColor: '#6f42c1',
-                                borderColor: '#5a359a',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'P2 (Medium)',
-                                data: [adminData.P2, newUserData.P2, salesData.P2, partnerData.P2],
-                                backgroundColor: '#20c997',
-                                borderColor: '#17a085',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            },
-                            {
-                                label: 'P3 (Low)',
-                                data: [adminData.P3, newUserData.P3, salesData.P3, partnerData.P3],
-                                backgroundColor: '#6c757d',
-                                borderColor: '#545b62',
-                                borderWidth: 1,
-                                borderRadius: 3
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'bottom',
-                                labels: {
-                                    font: { size: 10 },
-                                    padding: 10,
-                                    usePointStyle: true
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0,0,0,0.8)',
-                                titleFont: { size: 12, weight: 'bold' },
-                                bodyFont: { size: 11 },
-                                callbacks: {
-                                    title: function(context) {
-                                        return context[0].label + ' Users - ' + stageName;
-                                    },
-                                    label: function(context) {
-                                        var label = context.dataset.label;
-                                        var value = context.parsed.y;
-                                        var type = label.startsWith('S') ? 'Severity' : 'Priority';
-                                        return type + ' ' + label + ': ' + value + ' bug' + (value !== 1 ? 's' : '');
+                try {
+                    window[`${canvasId}Instance`] = new Chart(canvas.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Admin', 'New User', 'Sales', 'Partner'],
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: title,
+                                    font: { size: 14, weight: 'bold' },
+                                    padding: { bottom: 20 }
+                                },
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { 
+                                        padding: 15,
+                                        usePointStyle: true,
+                                        pointStyle: 'rect',
+                                        font: { size: 11 }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        title: function(context) {
+                                            return context[0].label + ' User Type';
+                                        },
+                                        afterBody: function(context) {
+                                            const userIndex = context.dataIndex;
+                                            const users = ['admin', 'newUser', 'sales', 'partner'];
+                                            const userData = normalizedData[users[userIndex]];
+                                            
+                                            if (!userData) return '';
+                                            
+                                            const severityTotal = (userData.S1 || 0) + (userData.S2 || 0) + (userData.S3 || 0);
+                                            const priorityTotal = (userData.P1 || 0) + (userData.P2 || 0) + (userData.P3 || 0);
+                                            
+                                            return [
+                                                '',
+                                                '--- Severity Stack ---',
+                                                `S1 (Critical): ${userData.S1 || 0}`,
+                                                `S2 (Major): ${userData.S2 || 0}`,
+                                                `S3 (Minor): ${userData.S3 || 0}`,
+                                                `Total Severity: ${severityTotal}`,
+                                                '',
+                                                '--- Priority Stack ---',
+                                                `P1 (Critical): ${userData.P1 || 0}`,
+                                                `P2 (High): ${userData.P2 || 0}`,
+                                                `P3 (Medium): ${userData.P3 || 0}`,
+                                                `Total Priority: ${priorityTotal}`
+                                            ];
+                                        }
                                     }
                                 }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: { precision: 0, font: { size: 10 } },
-                                grid: { color: 'rgba(0,0,0,0.1)' }
                             },
-                            x: {
-                                ticks: { font: { size: 10, weight: 'bold' } },
-                                grid: { display: false }
+                            scales: {
+                                y: { 
+                                    beginAtZero: true,
+                                    stacked: true,
+                                    ticks: {
+                                        stepSize: 1,
+                                        precision: 0
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Number of Issues'
+                                    }
+                                },
+                                x: {
+                                    stacked: true,
+                                    title: {
+                                        display: true,
+                                        text: 'User Types'
+                                    }
+                                }
+                            },
+                            interaction: {
+                                intersect: false,
+                                mode: 'index'
                             }
-                        }
-                    }
-                });
-                
-                console.log("✅ Chart created successfully for", stageName);
-            }
-
-            // Main chart creation logic
-            console.log("=== CREATING CHARTS ===");
-            
-            try {
-                // Create total chart first
-                createTotalChart();
-                
-                // Create stage-specific charts
-                if (chartData && chartData.stageData) {
-                    console.log("Creating stage-specific charts...");
-                    createUserTypeChart('inDevChart', chartData.stageData.inDev, 'In Development', 'Development');
-                    createUserTypeChart('inQAChart', chartData.stageData.inQA, 'In QA', 'QA');
-                    createUserTypeChart('resolvedChart', chartData.stageData.resolved, 'Resolved', 'Resolved');
-                    console.log("All stage charts created");
-                } else {
-                    console.warn("❌ No stage chart data available");
-                    ['inDevChart', 'inQAChart', 'resolvedChart'].forEach(function(canvasId) {
-                        var canvas = document.getElementById(canvasId);
-                        if (canvas) {
-                            var chartWrapper = canvas.parentNode;
-                            chartWrapper.innerHTML = '<div class="no-data-message">No data available<br><small>Add some bugs to see charts</small></div>';
                         }
                     });
+                } catch (error) {
+                    console.error(`Chart error for ${canvasId}:`, error);
+                    container.innerHTML = `
+                        <div class="no-data-message" style="color:#dc3545">
+                            ⚠️ Chart rendering failed
+                            <br><small style="margin-top:10px;display:block;">Error: ${error.message}</small>
+                        </div>
+                    `;
                 }
-            } catch (error) {
-                console.error("❌ Fatal error in chart creation:", error);
-                document.getElementById('debugInfo').innerHTML = 
-                    '<strong>Error:</strong> ' + error.message + ' | <a href="/debug-chart" target="_blank">Debug</a>';
-                document.getElementById('debugInfo').style.display = 'block';
             }
-            
+
+            // Main initialization
+            document.addEventListener('DOMContentLoaded', function() {
+                try {
+                    // Create Total Live Issues chart (Dev + QA combined)
+                    if (chartData?.stageData) {
+                        const liveData = combineLiveData(
+                            chartData.stageData.inDev, 
+                            chartData.stageData.inQA
+                        );
+                        initChart('totalLiveChart', liveData, 'Total Live Issues (Dev + QA Combined) - By User Type');
+                    } else {
+                        const el = document.getElementById('totalLiveChart');
+                        if (el) {
+                            el.parentNode.innerHTML = `
+                                <div class="no-data-message">
+                                    📊 No live issues data available
+                                    <br><small style="margin-top:10px;display:block;">Add bugs in Dev or QA to see the chart</small>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    // Initialize stage charts
+                    if (chartData?.stageData) {
+                        initChart('inDevChart', chartData.stageData.inDev, 'In Development - Stacked Distribution');
+                        initChart('inQAChart', chartData.stageData.inQA, 'In QA - Stacked Distribution');
+                        initChart('resolvedChart', chartData.stageData.resolved, 'Resolved - Stacked Distribution');
+                    } else {
+                        ['inDevChart', 'inQAChart', 'resolvedChart'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                el.parentNode.innerHTML = `
+                                    <div class="no-data-message">
+                                        📊 No stage data available
+                                        <br><small style="margin-top:10px;display:block;">Check your data source</small>
+                                    </div>
+                                `;
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error("Initialization failed:", error);
+                    document.getElementById('debugInfo').innerHTML += 
+                        `<br><strong style="color:#dc3545">Error: ${error.message}</strong>`;
+                }
+            });
             /*]]>*/
         </script>
 
