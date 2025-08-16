@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VenturBiz Promotions - Command Center</title>
+    <style>
+        :root {
+            --primary-gold: #D4AF37;
+            --gold-gradient: linear-gradient(135deg, #FFD700 0%, #D4AF37 50%, #B8860B 100%);
+            --dark-bg: #0a0a0a;
+            --dark-secondary: #1a1a1a;
+            --dark-tertiary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #e5e5e5;
+            --text-muted: #b0b0b0;
+            --border-color: #333333;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --gold-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+            --border-radius-sm: 6px;
+            --border-radius-md: 10px;
+            --border-radius-lg: 14px;
+            --border-radius-xl: 18px;
+            --border-radius-full: 50px;
+            --container-max-width: 1200px;
+            --navbar-height: 60px;
+            --section-spacing: 3rem;
+            --content-spacing: 2rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: var(--dark-secondary);
+            height: var(--navbar-height);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            max-width: var(--container-max-width);
+            margin: 0 auto;
+            height: 100%;
+            padding: 0 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .logo-image {
+            height: 34px;
+            width: auto;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .brand-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(212, 175, 55, 0.12);
+            padding: 0.45rem 0.9rem;
+            border-radius: var(--border-radius-full);
+            font-size: 0.8rem;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary-gold);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+        }
+
+        /* Layout */
+        .main-content {
+            margin-top: var(--navbar-height);
+            padding: var(--section-spacing) 0;
+        }
+
+        .container {
+            max-width: var(--container-max-width);
+            margin: 0 auto;
+            padding: 0 1.25rem;
+        }
+
+        /* Status banner */
+        .status-banner {
+            background: var(--dark-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem 1.25rem;
+            margin-bottom: var(--content-spacing);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .banner-badge {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(255, 215, 0, 0.08));
+            color: var(--text-secondary);
+            padding: 0.35rem 0.8rem;
+            border-radius: var(--border-radius-full);
+            font-size: 0.85rem;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+        }
+
+        /* Hero */
+        .hero-section {
+            background: var(--dark-secondary);
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-md);
+            padding: 3.5rem 3rem;
+            text-align: center;
+            margin-bottom: var(--section-spacing);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .hero-section::before {
+            content: '🚀📈';
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 1.3rem;
+            opacity: 0.08;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        .hero-title {
+            font-size: clamp(2.2rem, 5vw, 3rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-icons {
+            display: flex;
+            gap: 0.4rem;
+            font-size: clamp(1.9rem, 4vw, 2.3rem);
+            animation: bounce 3s infinite ease-in-out;
+        }
+
+        .gradient-text {
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 46rem;
+            margin: 0 auto 2.3rem;
+            line-height: 1.7;
+        }
+
+        .primary-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.9rem 2.1rem;
+            background: var(--gold-gradient);
+            color: var(--dark-bg);
+            font-weight: 700;
+            font-size: 1.05rem;
+            border-radius: var(--border-radius-full);
+            box-shadow: var(--gold-shadow);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(212, 175, 55, 0.4);
+        }
+
+        .primary-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            transition: left 0.6s;
+        }
+
+        .primary-button:hover::before {
+            left: 100%;
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: var(--section-spacing);
+        }
+
+        .feature-item {
+            background: var(--dark-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--primary-gold);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-item:nth-child(2n) {
+            border-left: 4px solid #FFD700;
+        }
+
+        .feature-item:nth-child(3n) {
+            border-left: 4px solid;
+            border-image: var(--gold-gradient) 1;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .feature-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(255, 215, 0, 0.08));
+            clip-path: polygon(100% 0, 0 0, 100% 100%);
+        }
+
+        .feature-icon {
+            position: absolute;
+            top: 1.4rem;
+            right: 1.4rem;
+            font-size: 1.2rem;
+            opacity: 0.75;
+            animation: pulseIcon 2.5s infinite ease-in-out;
+        }
+
+        .feature-title {
+            color: var(--primary-gold);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.7rem;
+            padding-right: 3rem;
+        }
+
+        .feature-text {
+            color: var(--text-muted);
+            font-size: 0.93rem;
+            line-height: 1.6;
+        }
+
+        /* CTA */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(255, 215, 0, 0.06));
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: var(--border-radius-xl);
+            padding: 2.4rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-section::before {
+            content: '🐝📈';
+            position: absolute;
+            top: 1rem;
+            right: 1.4rem;
+            font-size: 1.2rem;
+            opacity: 0.35;
+            animation: celebrate 3s infinite ease-in-out;
+        }
+
+        .cta-text {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .highlight-text {
+            color: var(--primary-gold);
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes pulseIcon {
+            0%, 100% { opacity: 0.75; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(2deg) scale(1.02); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo-image { height: 30px; }
+            .brand-name { font-size: 1rem; }
+            .status-wrapper { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+            .container { padding: 0 1rem; }
+            .hero-section { padding: 3rem 2rem; }
+            .feature-item { padding: 1.6rem; }
+            .cta-section { padding: 2rem 1.5rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero-section { padding: 2.5rem 1.4rem; }
+            .primary-button { padding: 0.8rem 1.6rem; font-size: 0.95rem; }
+            .feature-item { padding: 1.3rem; }
+            .cta-section { padding: 1.7rem 1.2rem; }
+        }
+
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
+
+        /* Accessibility focus */
+        .primary-button:focus-visible {
+            outline: 2px solid var(--primary-gold);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo-section">
+                <img src="vb.png" alt="VenturBiz Promotions" class="logo-image">
+                <div class="brand-name">VENTURBIZ PROMOTIONS PVT LTD</div>
+            </div>
+            <div class="status-wrapper">
+                <div class="status-dot"></div>
+                System Online
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="status-banner">
+                <strong>🏢 Enterprise Dashboard</strong>
+                <span class="banner-badge">All Teams • All Projects • Real-time Insights</span>
+            </div>
+
+            <section class="hero-section">
+                <h1 class="hero-title">
+                    <span class="hero-icons">🐞📊</span>
+                    Your <span class="gradient-text">Command Center</span> – Where <span class="gradient-text">Teams Succeed</span>
+                </h1>
+                <p class="hero-description">
+                    Welcome to VenturBiz Promotions' <span class="highlight-text">unified workspace</span> where operational excellence meets strategic growth. Our platform consolidates bug tracking, project management, and performance analytics into a single, powerful dashboard that keeps every team member connected and productive.
+                </p>
+                <a href="/login.html" class="primary-button">
+                    🐝 Access Dashboard
+                </a>
+            </section>
+
+            <section class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🐞</div>
+                    <h3 class="feature-title">Smart Issue Tracking</h3>
+                    <p class="feature-text">Live monitoring of software issues with intelligent prioritization, automated notifications, and streamlined resolution workflows that keep development teams in sync.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Performance Analytics</h3>
+                    <p class="feature-text">Comprehensive performance metrics, KPI monitoring, and project insights that provide leadership with the data needed for informed, strategic decisions.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">Role-Based Views</h3>
+                    <p class="feature-text">Customized interfaces for developers, managers, and executives, ensuring each team member sees exactly what they need to stay productive and informed.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📈</div>
+                    <h3 class="feature-title">Project Visibility</h3>
+                    <p class="feature-text">Unified timeline of development sprints, business initiatives, and cross-department projects, ensuring perfect alignment across all teams.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">💬</div>
+                    <h3 class="feature-title">Team Collaboration</h3>
+                    <p class="feature-text">Advanced communication tools that connect technical and business teams, enabling seamless knowledge sharing and coordinated project execution.</p>
+                </div>
+            </section>
+
+            <section class="cta-section">
+                <p class="cta-text">
+                    Ready to <strong>streamline your workflow</strong>? Join professionals who rely on VenturBiz to keep their teams connected, productive, and focused on <span class="highlight-text">shared success</span>. 🐝🚀
+                </p>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

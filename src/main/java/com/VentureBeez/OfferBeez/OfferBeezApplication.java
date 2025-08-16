@@ -11,4 +11,4 @@ public class OfferBeezApplication {
 		System.out.println("successfully lunch");
 	}
 
-}
+}	

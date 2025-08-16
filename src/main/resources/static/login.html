@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - VenturBiz Promotions</title>
+  <style>
+    :root {
+      --primary-gold: #D4AF37;
+      --gold-gradient: linear-gradient(135deg, #FFD700 0%, #D4AF37 50%, #B8860B 100%);
+      --dark-bg: #0a0a0a;
+      --dark-secondary: #1a1a1a;
+      --text-primary: #ffffff;
+      --input-bg: #222;
+      --input-border: #555;
+      --input-focus-border: #D4AF37;
+      --button-bg: #D4AF37;
+      --button-hover-bg: #b8952d;
+      --error-color: #b91c1c;
+      --radius-md: 8px;
+      --max-width: 360px;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 1rem;
+    }
+    .wrap {
+      background: var(--dark-secondary);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      width: 100%;
+      max-width: var(--max-width);
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+      font-size: 1.5rem;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      user-select:none;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-md);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+    input[type="text"]::placeholder,
+    input[type="password"]::placeholder {
+      color: var(--text-muted);
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--input-focus-border);
+      outline: none;
+      box-shadow: 0 0 8px rgba(212, 175, 55, 0.7);
+    }
+    button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--button-bg);
+      color: var(--dark-bg);
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+      transition: background 0.3s;
+    }
+    button:hover,
+    button:focus {
+      background: var(--button-hover-bg);
+      outline: none;
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.7);
+    }
+    .msg {
+      min-height: 1.2em;
+      margin-top: 0.75rem;
+      color: var(--error-color);
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      user-select:none;
+    }
+    .back-link {
+      text-align: center;
+      margin-top: 1.25rem;
+    }
+    .back-link a {
+      color: var(--primary-gold);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+    .back-link a:hover,
+    .back-link a:focus {
+      color: #b8952d;
+      outline: none;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" role="main" aria-label="Login Form">
+    <h1>VenturBiz Login</h1>
+    <form method="post" action="/perform_login" autocomplete="off" novalidate>
+      <label for="username" class="sr-only">Username</label>
+      <input type="text" id="username" name="username" placeholder="Username" required autofocus autocomplete="username" />
+      <label for="password" class="sr-only">Password</label>
+      <input type="password" id="password" name="password" placeholder="Password" required autocomplete="current-password" />
+      <button type="submit" aria-label="Log in to your account">Login</button>
+    </form>
+    <div class="msg" aria-live="polite" aria-atomic="true">
+      <script>
+        const params = new URLSearchParams(location.search);
+        if (params.get('error')) document.write('Invalid credentials.');
+        else if (params.get('logout')) document.write('Logged out successfully.');
+      </script>
+    </div>
+    <div class="back-link">
+      <a href="/" aria-label="Back to Home">Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>

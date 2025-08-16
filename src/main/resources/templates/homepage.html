@@ -1,772 +1,191 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OfferBeez Dashboard - VentureBeez</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-      min-height: 100vh; color: #333; 
-      overflow-x: hidden;
-    }
-
-    /* Entrance animation */
-    .container, .header, .section-card {
-      animation: fadeInUp 0.5s ease-out forwards;
-      opacity: 0;
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .container { max-width: 100%; margin: 0 auto; padding: 20px; }
-    .header { 
-      background: rgba(255,255,255,.95); 
-      padding: 20px; border-radius: 15px; 
-      margin-bottom: 30px; 
-      box-shadow: 0 8px 32px rgba(0,0,0,.1); 
-      position: relative; 
-      transform: translateY(16px);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .header h1 { 
-      color: #2c3e50; 
-      margin: 0; 
-      font-size: 2rem; 
-      flex: 1;
-    }
-    .header-button {
-      margin-left: 20px;
-    }
-    .overall-status { 
-      position: absolute; top: 20px; right: 20px; padding: 10px 20px; 
-      border-radius: 25px; font-weight: 700; font-size: 14px; 
-      box-shadow: 0 4px 15px rgba(0,0,0,.2); 
-    }
-    .overall-status.positive { background: linear-gradient(45deg,#28a745,#20c997); color: #fff; }
-    .overall-status.negative { background: linear-gradient(45deg,#dc3545,#e74c3c); color: #fff; }
-
-    /* Button hover and animation */
-    .action-buttons { text-align: center; margin: 20px 0; }
-    .btn { 
-      display: inline-block; padding: 12px 24px; margin: 0 8px; 
-      border: none; border-radius: 25px; font-size: 14px; 
-      font-weight: 600; text-decoration: none; color: #fff; cursor: pointer; 
-      transition: all .3s ease; box-shadow: 0 4px 15px rgba(0,0,0,.2);
-      position: relative;
-      overflow: hidden;
-    }
-    .btn-add { background: linear-gradient(45deg,#28a745,#20c997); }
-    .btn-add:hover { 
-      transform: translateY(-3px); 
-      box-shadow: 0 6px 20px rgba(40,167,69,.4); 
-    }
-    .btn-edit { background: linear-gradient(45deg,#007bff,#0056b3); padding: 4px 8px; font-size: 10px; }
-    .btn-delete { background: linear-gradient(45deg,#dc3545,#c82333); padding: 4px 8px; font-size: 10px; }
-    .btn:hover::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 5px;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.5);
-      opacity: 0;
-      border-radius: 100%;
-      transform: scale(1, 1) translate(-50%, -50%);
-      transform-origin: 50% 50%;
-    }
-    .btn:focus:not(:active)::after {
-      animation: ripple 0.6s ease-out;
-    }
-    @keyframes ripple {
-      0% { transform: scale(0, 0); opacity: 0.5; }
-      20% { transform: scale(25, 25); opacity: 0.3; }
-      100% { transform: scale(40, 40); opacity: 0; }
-    }
-
-    /* Card hover and entrance */
-    .section-card { 
-      background: rgba(255,255,255,.95); border-radius: 15px; 
-      padding: 24px; margin: 24px 0; 
-      box-shadow: 0 8px 32px rgba(0,0,0,.1); 
-      transform: translateY(16px);
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-    .section-card:hover {
-      transform: scale(1.01) translateY(-2px);
-      box-shadow: 0 12px 36px rgba(0,0,0,0.12);
-    }
-    .section-title { text-align: center; color: #2c3e50; font-size: 1.5rem; margin-bottom: 18px; font-weight: 700; }
-
-    /* Charts grid */
-    .charts-grid { 
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      grid-template-rows: 1fr 1fr; 
-      gap: 20px; 
-      max-width: 1200px; 
-      margin: 0 auto; 
-    }
-    @media (max-width: 768px) {
-      .charts-grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); gap: 15px; }
-    }
-
-    /* Chart card - hover and glossy effect */
-    .chart-card { 
-      background: #fff; 
-      border-radius: 12px; 
-      padding: 14px; 
-      box-shadow: 0 8px 25px rgba(0,0,0,.08); 
-      height: 380px;
-      transition: all 0.3s ease;
-    }
-    .chart-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 36px rgba(0,0,0,0.15);
-    }
-    .chart-header { 
-      text-align: center; 
-      padding: 12px; 
-      border-radius: 10px; 
-      margin-bottom: 12px; 
-      color: #fff; 
-      font-weight: 700; 
-      font-size: 13px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .dev-chart .chart-header { background: linear-gradient(45deg,#17a2b8,#138496); }
-    .qa-chart .chart-header { background: linear-gradient(45deg,#ffc107,#e0a800); color: #333; }
-    .live-items-chart .chart-header { background: linear-gradient(45deg,#28a745,#20c997); }
-    .previous-items-chart .chart-header { background: linear-gradient(45deg,#6c757d,#495057); }
-    .chart-container { 
-      height: 240px;
-      position: relative; 
-      display: block;
-    }
-    .bar-chart-container {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      padding-right: 140px;
-      padding-bottom: 10px;
-    }
-    .pie-chart-container {
-      position: absolute;
-      bottom: 15px;
-      right: 10px;
-      width: 120px;
-      height: 120px;
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      padding: 5px;
-      border: 2px solid #f8f9fa;
-    }
-    .chart-stats { 
-      text-align: center; 
-      margin-top: 12px; 
-      padding: 8px 12px; 
-      border-top: 2px solid #f1f3f5; 
-      color: #495057; 
-      font-weight: 700; 
-      font-size: 13px;
-      background: rgba(248, 249, 250, 0.8);
-      border-radius: 6px;
-    }
-
-    /* Table row hover and animation */
-    .data-table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      background: #fff; 
-      border-radius: 15px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,.1);
-      font-size: 11px;
-      table-layout: fixed;
-    }
-    .data-table th { 
-      background: linear-gradient(45deg,#2c3e50,#34495e); 
-      color: #fff; 
-      font-weight: 700; 
-      padding: 8px 4px; 
-      text-align: center; 
-      font-size: 10px; 
-      border-right: 1px solid #34495e;
-      white-space: nowrap; 
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .data-table td { 
-      padding: 6px 4px; 
-      border-bottom: 1px solid #e9ecef; 
-      border-right: 1px solid #f1f3f5;
-      font-size: 10px; 
-      vertical-align: middle;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .data-table th:nth-child(1), .data-table td:nth-child(1) { width: 3%; }
-    .data-table th:nth-child(2), .data-table td:nth-child(2) { width: 8%; }
-    .data-table th:nth-child(3), .data-table td:nth-child(3) { width: 5%; }
-    .data-table th:nth-child(4), .data-table td:nth-child(4) { width: 15%; white-space: normal; }
-    .data-table th:nth-child(5), .data-table td:nth-child(5) { width: 5%; }
-    .data-table th:nth-child(6), .data-table td:nth-child(6) { width: 5%; }
-    .data-table th:nth-child(7), .data-table td:nth-child(7) { width: 5%; }
-    .data-table th:nth-child(8), .data-table td:nth-child(8) { width: 5%; }
-    .data-table th:nth-child(9), .data-table td:nth-child(9) { width: 5%; }
-    .data-table th:nth-child(10), .data-table td:nth-child(10) { width: 5%; }
-    .data-table th:nth-child(11), .data-table td:nth-child(11) { width: 5%; }
-    .data-table th:nth-child(12), .data-table td:nth-child(12) { width: 5%; }
-    .data-table th:nth-child(13), .data-table td:nth-child(13) { width: 5%; }
-    .data-table th:nth-child(14), .data-table td:nth-child(14) { width: 5%; }
-    .data-table th:nth-child(15), .data-table td:nth-child(15) { width: 4%; }
-    .data-table th:nth-child(16), .data-table td:nth-child(16) { width: 6%; }
-    .data-table th:nth-child(17), .data-table td:nth-child(17) { width: 10%; white-space: normal; }
-    .data-table th:nth-child(18), .data-table td:nth-child(18) { width: 9%; }
-    .data-table tr:nth-child(even) { background-color: #f8f9fa; }
-    .data-table tr {
-      transition: all 0.15s ease;
-    }
-    .data-table tr:hover {
-      background: #e3f2fd !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      transform: translateY(-1px);
-    }
-
-    /* Badges and buttons */
-    .table-badge { 
-      padding: 3px 6px; 
-      border-radius: 12px; 
-      font-size: 9px; 
-      font-weight: 700; 
-      color: #fff; 
-      display: inline-block; 
-      min-width: 30px; 
-      text-align: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .badge-s1,.badge-p1,.badge-fail,.badge-yes { background: linear-gradient(45deg,#dc3545,#c82333); }
-    .badge-s2,.badge-p2,.badge-open,.badge-pending { background: linear-gradient(45deg,#ffc107,#e0a800); color: #333; }
-    .badge-s3,.badge-p3,.badge-pass,.badge-no,.badge-live { background: linear-gradient(45deg,#28a745,#1e7e34); }
-    .action-buttons-table { display: flex; gap: 2px; justify-content: center; }
-    .btn-sm { padding: 3px 6px; font-size: 9px; border-radius: 10px; color: #fff; text-decoration: none; }
-
-    /* Mobile adjustments */
-    @media (max-width: 768px) {
-      .container { padding: 10px; }
-      .header { 
-        flex-direction: column; 
-        text-align: center; 
-      }
-      .header h1 { 
-        font-size: 1.3rem; 
-        margin-bottom: 15px;
-      }
-      .header-button { 
-        margin-left: 0; 
-        margin-top: 10px; 
-      }
-      .chart-card { height: 300px; }
-      .chart-container { height: 200px; }
-      .bar-chart-container { padding-right: 110px; padding-bottom: 5px; }
-      .pie-chart-container { width: 100px; height: 100px; bottom: 10px; right: 5px; }
-      .charts-grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); gap: 15px; }
-      .data-table { font-size: 9px; }
-      .data-table th { padding: 6px 2px; font-size: 8px; }
-      .data-table td { padding: 4px 2px; font-size: 8px; }
-      .table-badge { font-size: 7px; padding: 2px 4px; min-width: 25px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Bug Tracking Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f7f7f7; }
+        h1 { margin-bottom: 8px; color: #333; }
+        h2 { color: #555; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        .actions a { margin-right: 8px; text-decoration: none; }
+        .actions a:hover { text-decoration: underline; }
+        .toolbar { margin: 12px 0 20px; }
+        .add-btn { background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; }
+        .add-btn:hover { background: #218838; }
+        .edit-btn { color: #007bff; }
+        .delete-btn { color: #dc3545; }
+        .severity-s1 { color: #dc3545; font-weight: bold; }
+        .severity-s2 { color: #fd7e14; font-weight: bold; }
+        .severity-s3 { color: #28a745; font-weight: bold; }
+        .priority-p1 { color: #dc3545; font-weight: bold; }
+        .priority-p2 { color: #fd7e14; font-weight: bold; }
+        .priority-p3 { color: #28a745; font-weight: bold; }
+    </style>
 </head>
-
 <body>
-<div class="container">
-  <div class="header">
-    <h1>OfferBeez Dashboard - VentureBeez</h1>
-    
-    <div class="overall-status" th:classappend="${overallStatus == 'NEGATIVE'} ? 'negative' : 'positive'">
-      <span th:text="${overallStatus == 'NEGATIVE'} ? 'NEGATIVE STATUS' : 'POSITIVE STATUS'"></span>
+    <h1>Bug Tracking Dashboard</h1>
+
+    <div class="toolbar">
+        <a href="/bugs/add" class="add-btn">+ Add New Bug</a>
     </div>
-  </div>
 
-  <div class="action-buttons">
-    <a href="/add" class="btn btn-add">Add New Item</a>
-  </div>
+    <!-- Bug statistics chart -->
+    <canvas id="bugChart" width="600" height="240"></canvas>
 
-  <!-- Charts Section -->
-  <div class="section-card">
-    <div class="section-title">Dashboard Charts - Perfect Value Centering</div>
-    <div class="charts-grid">
-      <div class="chart-card dev-chart">
-        <div class="chart-header">Development: Each Bar = S1(red) + S2(yellow) + S3(green)</div>
-        <div class="chart-container">
-          <div class="bar-chart-container"><canvas id="devChart"></canvas></div>
-          <div class="pie-chart-container"><canvas id="devPieChart"></canvas></div>
-        </div>
-        <div class="chart-stats">Total Dev Items: <span id="devTotal">0</span></div>
-      </div>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var stats = /*[[${stats}]]*/ {};
+        var chartData = [
+            stats.inDev || 0,
+            stats.inQA || 0,
+            stats.totalLive || 0,
+            stats.resolved || 0
+        ];
 
-      <div class="chart-card qa-chart">
-        <div class="chart-header">QA: Each Bar = P1(red) + P2(yellow) + P3(green)</div>
-        <div class="chart-container">
-          <div class="bar-chart-container"><canvas id="qaChart"></canvas></div>
-          <div class="pie-chart-container"><canvas id="qaPieChart"></canvas></div>
-        </div>
-        <div class="chart-stats">Total QA Items: <span id="qaTotal">0</span></div>
-      </div>
+        var ctx = document.getElementById('bugChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['In Dev', 'In QA', 'Total Live', 'Resolved'],
+                datasets: [{
+                    label: 'Bug Count',
+                    data: chartData,
+                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Bug Status Overview' }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+        /*]]>*/
+    </script>
 
-      <div class="chart-card live-items-chart">
-        <div class="chart-header">Live Items: Current Production Issues</div>
-        <div class="chart-container">
-          <div class="bar-chart-container"><canvas id="liveItemsChart"></canvas></div>
-          <div class="pie-chart-container"><canvas id="liveItemsPieChart"></canvas></div>
-        </div>
-        <div class="chart-stats">Total Live Items: <span id="liveItemsTotal">0</span></div>
-      </div>
+    <hr/>
 
-      <div class="chart-card previous-items-chart">
-        <div class="chart-header">Previous Items: Historical Issues</div>
-        <div class="chart-container">
-          <div class="bar-chart-container"><canvas id="previousItemsChart"></canvas></div>
-          <div class="pie-chart-container"><canvas id="previousItemsPieChart"></canvas></div>
-        </div>
-        <div class="chart-stats">Total Previous Items: <span id="previousItemsTotal">0</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Optimized Table Section - NO SCROLL -->
-  <div class="section-card">
-    <div class="section-title">Complete Data Table</div>
-    <table class="data-table">
-      <thead>
-      <tr>
-        <th>ID</th><th>Project</th><th>Bug #</th><th>Issue Description</th>
-        <th>Sev</th><th>Pri</th><th>New</th><th>Part</th>
-        <th>Adm</th><th>Sale</th><th>Status</th><th>Live</th>
-        <th>Dev</th><th>QA</th><th>Reop</th><th>V&C</th>
-        <th>Remarks</th><th>Actions</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="item : ${devItems}">
-        <td th:text="${item.id}"></td>
-        <td th:text="${item.project}" title="Project"></td>
-        <td th:text="${item.bugNumber}"></td>
-        <td th:text="${item.issue}" title="${item.issue}"></td>
-        <td><span th:text="${item.severity}" th:class="'table-badge badge-' + ${item.severity}"></span></td>
-        <td><span th:text="${item.priority}" th:class="'table-badge badge-' + ${item.priority}"></span></td>
-        <td><span th:text="${item.newUser}" th:class="'table-badge badge-' + ${item.newUser}"></span></td>
-        <td><span th:text="${item.partner}" th:class="'table-badge badge-' + ${item.partner}"></span></td>
-        <td><span th:text="${item.admin}" th:class="'table-badge badge-' + ${item.admin}"></span></td>
-        <td><span th:text="${item.sales}" th:class="'table-badge badge-' + ${item.sales}"></span></td>
-        <td><span th:text="${item.status}" th:class="'table-badge badge-' + ${item.status}"></span></td>
-        <td><span th:text="${item.live} ? 'Live' : 'Prev'" th:class="'table-badge badge-' + (${item.live} ? 'live' : 'no')"></span></td>
-        <td><span th:text="${item.inDev}" th:class="'table-badge badge-' + ${item.inDev}"></span></td>
-        <td><span th:text="${item.inQA}" th:class="'table-badge badge-' + ${item.inQA}"></span></td>
-        <td th:text="${item.reopen}"></td>
-        <td th:text="${item.verifyAndClosed}"></td>
-        <td th:text="${item.remarks}" title="${item.remarks}"></td>
-        <td>
-          <div class="action-buttons-table">
-            <a th:href="@{/edit/{id}(id=${item.id})}" class="btn btn-edit btn-sm">Edit</a>
-            <a th:href="@{/delete/{id}(id=${item.id})}" class="btn btn-delete btn-sm" onclick="return confirm('Delete this item?')">Delete</a>
-          </div>
-        </td>
-      </tr>
-      </tbody>
+    <!-- Section: In Dev -->
+    <h2>In Development (<span th:text="${#lists.size(inDevBugs)}">0</span>)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Project</th>
+                <th>Bug #</th>
+                <th>Issue</th>
+                <th>Severity</th>
+                <th>Priority</th>
+                <th>Remarks</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="bug : ${inDevBugs}">
+                <td th:text="${bug.id}">1</td>
+                <td th:text="${bug.project}">Project</td>
+                <td th:text="${bug.bugNumber}">BUG-001</td>
+                <td th:text="${bug.issue}">Issue</td>
+                <td th:text="${bug.severity}" 
+                    th:class="${'severity-' + bug.severity.name().toLowerCase()}">S1</td>
+                <td th:text="${bug.priority}"
+                    th:class="${'priority-' + bug.priority.name().toLowerCase()}">P1</td>
+                <td th:text="${bug.remarks}">Notes</td>
+                <td class="actions">
+                    <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
+                    <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
+                       onclick="return confirm('Delete this bug?');">Delete</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(inDevBugs)}">
+                <td colspan="8">No bugs in development.</td>
+            </tr>
+        </tbody>
     </table>
-  </div>
-</div>
 
-<!-- Rest of your JavaScript remains the same -->
-<script>
-/* CHART.JS CUSTOM PLUGINS */
-// Center Value Plugin for Bar Charts
-const centerValuePlugin = {
-  id: 'perfectCenterValues',
-  afterDatasetsDraw(chart) {
-    const ctx = chart.ctx;
-    chart.data.datasets.forEach((dataset, datasetIndex) => {
-      const meta = chart.getDatasetMeta(datasetIndex);
-      meta.data.forEach((element, index) => {
-        const value = dataset.data[index];
-        if (value > 0) {
-          let yStart = element.base;
-          let yEnd = element.y;
-          for (let i = 0; i < datasetIndex; i++) {
-            const prevValue = chart.data.datasets[i].data[index] || 0;
-            if (prevValue > 0) {
-              const prevMeta = chart.getDatasetMeta(i);
-              const prevElement = prevMeta.data[index];
-              yStart = prevElement.y;
-            }
-          }
-          const centerX = element.x;
-          const centerY = yStart + (yEnd - yStart) / 2;
-          ctx.save();
-          ctx.fillStyle = '#fff';
-          ctx.font = 'bold 14px Segoe UI';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.shadowColor = 'rgba(0,0,0,0.5)';
-          ctx.shadowBlur = 4;
-          ctx.shadowOffsetX = 1;
-          ctx.shadowOffsetY = 1;
-          ctx.fillText(value, centerX, centerY);
-          ctx.restore();
-        }
-      });
-    });
-  }
-};
+    <!-- Section: In QA -->
+    <h2>In QA (<span th:text="${#lists.size(inQaBugs)}">0</span>)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Project</th>
+                <th>Bug #</th>
+                <th>Issue</th>
+                <th>Severity</th>
+                <th>Priority</th>
+                <th>Remarks</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="bug : ${inQaBugs}">
+                <td th:text="${bug.id}">1</td>
+                <td th:text="${bug.project}">Project</td>
+                <td th:text="${bug.bugNumber}">BUG-002</td>
+                <td th:text="${bug.issue}">Issue</td>
+                <td th:text="${bug.severity}"
+                    th:class="${'severity-' + bug.severity.name().toLowerCase()}">S2</td>
+                <td th:text="${bug.priority}"
+                    th:class="${'priority-' + bug.priority.name().toLowerCase()}">P2</td>
+                <td th:text="${bug.remarks}">Notes</td>
+                <td class="actions">
+                    <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
+                    <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
+                       onclick="return confirm('Delete this bug?');">Delete</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(inQaBugs)}">
+                <td colspan="8">No bugs in QA.</td>
+            </tr>
+        </tbody>
+    </table>
 
-// Center Value Plugin for Pie Charts
-const centeredPieValuePlugin = {
-  id: 'perfectPieCenter',
-  afterDatasetsDraw(chart) {
-    const ctx = chart.ctx;
-    const meta = chart.getDatasetMeta(0);
-    if (!meta.data.length) return;
-    const dataset = chart.data.datasets[0];
-    const total = dataset.data.reduce((a, b) => a + b, 0);
-    meta.data.forEach((arc, index) => {
-      const value = dataset.data[index];
-      if (value > 0) {
-        const startAngle = arc.startAngle;
-        const endAngle = arc.endAngle;
-        const centerAngle = (startAngle + endAngle) / 2;
-        const radius = (arc.innerRadius + arc.outerRadius) / 2 * 0.7;
-        const centerX = arc.x + Math.cos(centerAngle) * radius;
-        const centerY = arc.y + Math.sin(centerAngle) * radius;
-        ctx.save();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 16px Segoe UI';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'rgba(0,0,0,0.8)';
-        ctx.shadowBlur = 5;
-        ctx.shadowOffsetX = 2;
-        ctx.shadowOffsetY = 2;
-        ctx.fillText(value, centerX, centerY);
-        ctx.restore();
-      }
-    });
-  }
-};
+    <!-- Section: Resolved -->
+    <h2>Resolved (<span th:text="${#lists.size(resolvedBugs)}">0</span>)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Project</th>
+                <th>Bug #</th>
+                <th>Issue</th>
+                <th>Severity</th>
+                <th>Priority</th>
+                <th>Remarks</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="bug : ${resolvedBugs}">
+                <td th:text="${bug.id}">1</td>
+                <td th:text="${bug.project}">Project</td>
+                <td th:text="${bug.bugNumber}">BUG-003</td>
+                <td th:text="${bug.issue}">Issue</td>
+                <td th:text="${bug.severity}"
+                    th:class="${'severity-' + bug.severity.name().toLowerCase()}">S3</td>
+                <td th:text="${bug.priority}"
+                    th:class="${'priority-' + bug.priority.name().toLowerCase()}">P3</td>
+                <td th:text="${bug.remarks}">Notes</td>
+                <td class="actions">
+                    <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
+                    <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
+                       onclick="return confirm('Delete this bug?');">Delete</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(resolvedBugs)}">
+                <td colspan="8">No resolved bugs.</td>
+            </tr>
+        </tbody>
+    </table>
 
-// Register Plugins
-Chart.register(centerValuePlugin, centeredPieValuePlugin);
-
-// Initialize the dashboard charts on load
-document.addEventListener('DOMContentLoaded', function() { 
-    console.log('DOM loaded, initializing perfectly centered charts (no icons)...');
-    initializeCharts(); 
-    document.querySelectorAll('.container, .header, .section-card').forEach((el, i) => {
-      setTimeout(() => {
-        el.style.opacity = '1';
-        el.style.transform = 'translateY(0)';
-      }, 150 * i);
-    });
-});
-
-function initializeCharts() {
-  const rows = document.querySelectorAll('.data-table tbody tr');
-  const categories = ['Partner', 'Sales', 'New User', 'Admin'];
-  let devSeverityData = {};
-  let devPriorityData = {};
-  let qaSeverityData = {};
-  let qaPriorityData = {};
-  let liveItemsData = {};
-  let previousItemsData = {};
-  
-  categories.forEach(cat => {
-    devSeverityData[cat] = { s1: 0, s2: 0, s3: 0 };
-    devPriorityData[cat] = { p1: 0, p2: 0, p3: 0 };
-    qaSeverityData[cat] = { s1: 0, s2: 0, s3: 0 };
-    qaPriorityData[cat] = { p1: 0, p2: 0, p3: 0 };
-    liveItemsData[cat] = { s1: 0, s2: 0, s3: 0 };
-    previousItemsData[cat] = { s1: 0, s2: 0, s3: 0 };
-  });
-
-  rows.forEach((row, index) => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length < 18) return;
-
-    const severity = cells[4].querySelector('.table-badge')?.textContent.trim().toLowerCase() || 's3';
-    const priority = cells[5].querySelector('.table-badge')?.textContent.trim().toLowerCase() || 'p3';
-    const newUser = cells[6].querySelector('.table-badge')?.textContent.trim().toLowerCase() || 'no';
-    const partner = cells[7].querySelector('.table-badge')?.textContent.trim().toLowerCase() || 'no';
-    const admin = cells[8].querySelector('.table-badge')?.textContent.trim().toLowerCase() || 'no';
-    const sales = cells[9].querySelector('.table-badge')?.textContent.trim().toLowerCase() || 'no';
-    const inDev = cells[12].querySelector('.table-badge')?.textContent.trim().toLowerCase() || 'no';
-    const inQA = cells[13].querySelector('.table-badge')?.textContent.trim().toLowerCase() || 'no';
-    const liveStatus = cells[11].querySelector('.table-badge')?.textContent.trim().toLowerCase() || 'no';
-    const isLive = liveStatus === 'live';
-
-    const itemCategories = [];
-    if (newUser === 'yes') itemCategories.push('New User');
-    if (partner === 'yes') itemCategories.push('Partner');
-    if (admin === 'yes') itemCategories.push('Admin');
-    if (sales === 'yes') itemCategories.push('Sales');
-    if (itemCategories.length === 0) return;
-
-    itemCategories.forEach(category => {
-      // Dev items
-      if (inDev === 'open' || inDev === 'pass' || inDev === 'fail' || inDev === 'pending') {
-        if (severity === 's1') devSeverityData[category].s1++;
-        else if (severity === 's2') devSeverityData[category].s2++;
-        else if (severity === 's3') devSeverityData[category].s3++;
-        if (priority === 'p1') devPriorityData[category].p1++;
-        else if (priority === 'p2') devPriorityData[category].p2++;
-        else if (priority === 'p3') devPriorityData[category].p3++;
-      }
-      // QA items
-      if (inQA === 'open' || inQA === 'pass' || inQA === 'fail' || inQA === 'pending') {
-        if (severity === 's1') qaSeverityData[category].s1++;
-        else if (severity === 's2') qaSeverityData[category].s2++;
-        else if (severity === 's3') qaSeverityData[category].s3++;
-        if (priority === 'p1') qaPriorityData[category].p1++;
-        else if (priority === 'p2') qaPriorityData[category].p2++;
-        else if (priority === 'p3') qaPriorityData[category].p3++;
-      }
-      // Live/Previous items
-      if (isLive) {
-        if (severity === 's1') liveItemsData[category].s1++;
-        else if (severity === 's2') liveItemsData[category].s2++;
-        else if (severity === 's3') liveItemsData[category].s3++;
-      } else {
-        if (severity === 's1') previousItemsData[category].s1++;
-        else if (severity === 's2') previousItemsData[category].s2++;
-        else if (severity === 's3') previousItemsData[category].s3++;
-      }
-    });
-  });
-
-  let devTotal = 0, qaTotal = 0, liveTotal = 0, previousTotal = 0;
-  categories.forEach(cat => {
-    devTotal += devSeverityData[cat].s1 + devSeverityData[cat].s2 + devSeverityData[cat].s3;
-    qaTotal += qaSeverityData[cat].s1 + qaSeverityData[cat].s2 + qaSeverityData[cat].s3;
-    liveTotal += liveItemsData[cat].s1 + liveItemsData[cat].s2 + liveItemsData[cat].s3;
-    previousTotal += previousItemsData[cat].s1 + previousItemsData[cat].s2 + previousItemsData[cat].s3;
-  });
-
-  setText('devTotal', devTotal);
-  setText('qaTotal', qaTotal);
-  setText('liveItemsTotal', liveTotal);
-  setText('previousItemsTotal', previousTotal);
-
-  createCombinedSeverityChart('devChart', 'devPieChart', 'Development Items by Severity', devSeverityData);
-  createCombinedPriorityChart('qaChart', 'qaPieChart', 'QA Items by Priority', devPriorityData);
-  createCombinedSeverityChart('liveItemsChart', 'liveItemsPieChart', 'Live Items by Severity', liveItemsData);
-  createCombinedSeverityChart('previousItemsChart', 'previousItemsPieChart', 'Previous Items by Severity', previousItemsData);
-}
-
-function setText(id, value) {
-  const element = document.getElementById(id);
-  if (element) element.textContent = value;
-}
-
-function createCombinedSeverityChart(barCanvasId, pieCanvasId, title, data) {
-  createStackedSeverityChart(barCanvasId, title, data);
-  createSeverityPieChart(pieCanvasId, data);
-}
-
-function createCombinedPriorityChart(barCanvasId, pieCanvasId, title, data) {
-  createStackedPriorityChart(barCanvasId, title, data);
-  createPriorityPieChart(pieCanvasId, data);
-}
-
-function createStackedSeverityChart(canvasId, title, data) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const categories = ['Partner', 'Sales', 'New User', 'Admin'];
-  
-  const datasets = [
-    { label: 'S1 (Critical)', data: categories.map(cat => data[cat].s1), backgroundColor: '#dc3545', borderColor: '#dc3545', borderWidth: 1 },
-    { label: 'S2 (High)', data: categories.map(cat => data[cat].s2), backgroundColor: '#ffc107', borderColor: '#ffc107', borderWidth: 1 },
-    { label: 'S3 (Medium)', data: categories.map(cat => data[cat].s3), backgroundColor: '#28a745', borderColor: '#28a745', borderWidth: 1 }
-  ];
-
-  new Chart(ctx, {
-    type: 'bar',
-    data: { labels: categories, datasets: datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'top', labels: { fontSize: 12 } },
-        tooltip: { mode: 'index', intersect: false }
-      },
-      scales: {
-        x: { stacked: true, grid: { display: false } },
-        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
-      },
-      animation: {
-        duration: 800,
-        easing: 'easeOutQuart',
-        delay: (ctx) => ctx.dataIndex * 100
-      },
-    },
-    plugins: [centerValuePlugin]
-  });
-}
-
-function createStackedPriorityChart(canvasId, title, data) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const categories = ['Partner', 'Sales', 'New User', 'Admin'];
-  
-  const datasets = [
-    { label: 'P1 (Urgent)', data: categories.map(cat => data[cat].p1), backgroundColor: '#dc3545', borderColor: '#dc3545', borderWidth: 1 },
-    { label: 'P2 (High)', data: categories.map(cat => data[cat].p2), backgroundColor: '#ffc107', borderColor: '#ffc107', borderWidth: 1 },
-    { label: 'P3 (Normal)', data: categories.map(cat => data[cat].p3), backgroundColor: '#28a745', borderColor: '#28a745', borderWidth: 1 }
-  ];
-
-  new Chart(ctx, {
-    type: 'bar',
-    data: { labels: categories, datasets: datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'top', labels: { fontSize: 12 } },
-        tooltip: { mode: 'index', intersect: false }
-      },
-      scales: {
-        x: { stacked: true, grid: { display: false } },
-        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
-      },
-      animation: {
-        duration: 800,
-        easing: 'easeOutQuart',
-        delay: (ctx) => ctx.dataIndex * 100
-      },
-    },
-    plugins: [centerValuePlugin]
-  });
-}
-
-function createSeverityPieChart(canvasId, data) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const categories = ['Partner', 'Sales', 'New User', 'Admin'];
-  let s1Total = 0, s2Total = 0, s3Total = 0;
-  categories.forEach(cat => {
-    s1Total += data[cat].s1;
-    s2Total += data[cat].s2;
-    s3Total += data[cat].s3;
-  });
-  const labels = [], chartData = [], colors = [];
-  if (s1Total > 0) { labels.push('S1'); chartData.push(s1Total); colors.push('#dc3545'); }
-  if (s2Total > 0) { labels.push('S2'); chartData.push(s2Total); colors.push('#ffc107'); }
-  if (s3Total > 0) { labels.push('S3'); chartData.push(s3Total); colors.push('#28a745'); }
-
-  new Chart(ctx, {
-    type: 'pie',
-    data: { labels: labels, datasets: [{ data: chartData, backgroundColor: colors, borderWidth: 2 }] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              const total = chartData.reduce((a, b) => a + b, 0);
-              const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-              return `${context.label}: ${context.parsed} (${percentage}%)`;
-            }
-          }
-        }
-      },
-      animation: {
-        animateScale: true,
-        animateRotate: true,
-        duration: 900,
-        easing: 'easeInOutQuart'
-      },
-      cutout: '65%', // Doughnut style
-      offset: 8,
-    },
-    plugins: [centeredPieValuePlugin]
-  });
-}
-
-function createPriorityPieChart(canvasId, data) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const categories = ['Partner', 'Sales', 'New User', 'Admin'];
-  let p1Total = 0, p2Total = 0, p3Total = 0;
-  categories.forEach(cat => {
-    p1Total += data[cat].p1;
-    p2Total += data[cat].p2;
-    p3Total += data[cat].p3;
-  });
-  const labels = [], chartData = [], colors = [];
-  if (p1Total > 0) { labels.push('P1'); chartData.push(p1Total); colors.push('#dc3545'); }
-  if (p2Total > 0) { labels.push('P2'); chartData.push(p2Total); colors.push('#ffc107'); }
-  if (p3Total > 0) { labels.push('P3'); chartData.push(p3Total); colors.push('#28a745'); }
-
-  new Chart(ctx, {
-    type: 'pie',
-    data: { labels: labels, datasets: [{ data: chartData, backgroundColor: colors, borderWidth: 2 }] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              const total = chartData.reduce((a, b) => a + b, 0);
-              const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-              return `${context.label}: ${context.parsed} (${percentage}%)`;
-            }
-          }
-        }
-      },
-      animation: {
-        animateScale: true,
-        animateRotate: true,
-        duration: 900,
-        easing: 'easeInOutQuart'
-      },
-      cutout: '65%', // Doughnut style
-      offset: 8,
-    },
-    plugins: [centeredPieValuePlugin]
-  });
-}
-
-// Button Ripple Animation
-document.querySelectorAll('.btn').forEach(btn => {
-  btn.addEventListener('click', function(e) {
-    const x = e.clientX - e.target.getBoundingClientRect().left;
-    const y = e.clientY - e.target.getBoundingClientRect().top;
-    const ripple = document.createElement('span');
-    ripple.style.left = x + 'px';
-    ripple.style.top = y + 'px';
-    ripple.classList.add('ripple');
-    this.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 500);
-  });
-});
-</script>
 </body>
 </html>

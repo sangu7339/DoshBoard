@@ -2,515 +2,80 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Item - OfferBeez</title>
-    
+    <title>Update Bug</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .form-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-        }
-
-        .form-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .form-header h1 {
-            color: #2c3e50;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .form-header p {
-            color: #6c757d;
-            font-size: 1.1rem;
-        }
-
-        .item-info {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 4px solid #007bff;
-        }
-
-        .item-info strong {
-            color: #1565c0;
-        }
-
-        .status-transition-info {
-            margin-bottom: 20px;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            border: none;
-            margin-bottom: 20px;
-        }
-
-        .alert-info {
-            background: linear-gradient(45deg, #d1ecf1, #bee5eb);
-            color: #0c5460;
-            border-left: 4px solid #17a2b8;
-        }
-
-        .alert h5 {
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .alert p {
-            margin: 5px 0;
-            font-size: 14px;
-        }
-
-        .badge-live {
-            background: linear-gradient(45deg, #28a745, #1e7e34);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .badge-previous {
-            background: linear-gradient(45deg, #6c757d, #545b62);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .required {
-            color: #dc3545;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #007bff;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-        }
-
-        .form-control.severity-s1, .form-control.priority-p1 {
-            border-color: #dc3545;
-            background: rgba(220, 53, 69, 0.05);
-        }
-
-        .form-control.severity-s2, .form-control.priority-p2 {
-            border-color: #ffc107;
-            background: rgba(255, 193, 7, 0.05);
-        }
-
-        .form-control.severity-s3, .form-control.priority-p3 {
-            border-color: #28a745;
-            background: rgba(40, 167, 69, 0.05);
-        }
-
-        textarea.form-control {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(45deg, #007bff, #0056b3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(45deg, #6c757d, #545b62);
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
-        }
-
-        .btn-reset {
-            background: linear-gradient(45deg, #ffc107, #e0a800);
-            color: #333;
-        }
-
-        .btn-reset:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-
-            .form-card {
-                padding: 20px;
-            }
-
-            .form-header h1 {
-                font-size: 2rem;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .btn-group {
-                flex-direction: column;
-            }
-        }
-
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.6s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #0056b3; }
+        .back-link { margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="form-card fade-in">
-            <div class="form-header">
-                <h1>✏️ Update Item</h1>
-                <p>Modify the details of this dashboard item</p>
-            </div>
-
-            <div class="item-info">
-                <strong>Updating Item ID:</strong> <span th:text="${item.id}">N/A</span> | 
-                <strong>Project:</strong> <span th:text="${item.project}">N/A</span> | 
-                <strong>Bug#:</strong> <span th:text="${item.bugNumber}">N/A</span>
-            </div>
-
-            <!-- Status Transition Indicator -->
-            <div class="status-transition-info">
-                <div class="alert alert-info">
-                    <h5>🔄 Status Transition</h5>
-                    <p><strong>Current item:</strong> Will be moved to <span class="badge-live">🔴 LIVE</span> status</p>
-                    <p><strong>Previous version:</strong> Will be automatically created in <span class="badge-previous">⚫ PREVIOUS</span> status</p>
-                </div>
-            </div>
-
-            <form th:action="@{/update}" method="post" th:object="${item}" id="updateForm">
-                <input type="hidden" th:field="*{id}">
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Project Name <span class="required">*</span></label>
-                        <input type="text" class="form-control" th:field="*{project}" required 
-                               placeholder="Enter project name">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Bug Number <span class="required">*</span></label>
-                        <input type="text" class="form-control" th:field="*{bugNumber}" required 
-                               placeholder="e.g., BUG001">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Severity <span class="required">*</span></label>
-                        <select class="form-control" th:field="*{severity}" id="severity" required>
-                            <option value="">Select Severity</option>
-                            <option value="S1">S1 - Critical</option>
-                            <option value="S2">S2 - High</option>
-                            <option value="S3">S3 - Medium</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Priority <span class="required">*</span></label>
-                        <select class="form-control" th:field="*{priority}" id="priority" required>
-                            <option value="">Select Priority</option>
-                            <option value="P1">P1 - High</option>
-                            <option value="P2">P2 - Medium</option>
-                            <option value="P3">P3 - Low</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">New User</label>
-                        <select class="form-control" th:field="*{newUser}">
-                            <option value="Applicable">Applicable</option>
-                            <option value="Not Applicable">Not Applicable</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Partner</label>
-                        <select class="form-control" th:field="*{partner}">
-                            <option value="Applicable">Applicable</option>
-                            <option value="Not Applicable">Not Applicable</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Admin</label>
-                        <select class="form-control" th:field="*{admin}">
-                            <option value="Applicable">Applicable</option>
-                            <option value="Not Applicable">Not Applicable</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Sales</label>
-                        <select class="form-control" th:field="*{sales}">
-                            <option value="Applicable">Applicable</option>
-                            <option value="Not Applicable">Not Applicable</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select class="form-control" th:field="*{status}">
-                            <option value="In Dev">In Dev</option>
-                            <option value="In QA">In QA</option>
-                            <option value="Completed">Completed</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Live Status</label>
-                        <select class="form-control" th:field="*{live}">
-                            <option value="true">Live</option>
-                            <option value="false">Previous</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">In Dev</label>
-                        <select class="form-control" th:field="*{inDev}">
-                            <option value="open">Open</option>
-                            <option value="pass">Pass</option>
-                            <option value="fail">Fail</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">In QA</label>
-                        <select class="form-control" th:field="*{inQA}">
-                            <option value="open">Open</option>
-                            <option value="pass">Pass</option>
-                            <option value="fail">Fail</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Reopen</label>
-                        <select class="form-control" th:field="*{reopen}">
-                            <option value="no">No</option>
-                            <option value="yes">Yes</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Verify & Closed</label>
-                        <select class="form-control" th:field="*{verifyAndClosed}">
-                            <option value="pending">Pending</option>
-                            <option value="pass">Pass</option>
-                            <option value="fail">Fail</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Issue Description <span class="required">*</span></label>
-                    <textarea class="form-control" th:field="*{issue}" rows="3" required 
-                              placeholder="Describe the issue in detail"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Remarks</label>
-                    <textarea class="form-control" th:field="*{remarks}" rows="3" 
-                              placeholder="Add any additional notes or comments"></textarea>
-                </div>
-
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">💾 Update to Live</button>
-                    <button type="reset" class="btn btn-reset">🔄 Reset Changes</button>
-                    <a href="/" class="btn btn-secondary">↩️ Back to Home</a>
-                </div>
-            </form>
-        </div>
+    <div class="back-link">
+        <a th:href="@{/}">← Back to Dashboard</a>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const severitySelect = document.getElementById('severity');
-            const prioritySelect = document.getElementById('priority');
-            const form = document.getElementById('updateForm');
-
-            // Initialize with current values
-            updateSelectStyle(severitySelect, 'severity');
-            updateSelectStyle(prioritySelect, 'priority');
-
-            // Color coding for severity and priority
-            function updateSelectStyle(select, type) {
-                const value = select.value;
-                select.className = 'form-control';
-                
-                if (value === 'S1' || value === 'P1') {
-                    select.classList.add(type + '-s1');
-                } else if (value === 'S2' || value === 'P2') {
-                    select.classList.add(type + '-s2');
-                } else if (value === 'S3' || value === 'P3') {
-                    select.classList.add(type + '-s3');
-                }
-            }
-
-            severitySelect.addEventListener('change', function() {
-                updateSelectStyle(this, 'severity');
-            });
-
-            prioritySelect.addEventListener('change', function() {
-                updateSelectStyle(this, 'priority');
-            });
-
-            // Form submission handling
-            form.addEventListener('submit', function(e) {
-                const submitBtn = this.querySelector('button[type="submit"]');
-                
-                // Confirm update
-                if (!confirm('Are you sure you want to update this item? Previous version will be saved.')) {
-                    e.preventDefault();
-                    return;
-                }
-                
-                submitBtn.innerHTML = '⏳ Updating to Live...';
-                submitBtn.disabled = true;
-                form.classList.add('loading');
-            });
-
-            // Form validation
-            const requiredFields = form.querySelectorAll('[required]');
-            requiredFields.forEach(field => {
-                field.addEventListener('blur', function() {
-                    if (!this.value.trim()) {
-                        this.style.borderColor = '#dc3545';
-                        this.style.background = 'rgba(220, 53, 69, 0.05)';
-                    } else {
-                        this.style.borderColor = '#007bff';
-                        this.style.background = 'rgba(0, 123, 255, 0.05)';
-                    }
-                });
-            });
-
-            // Track changes
-            const originalData = new FormData(form);
-            let hasChanges = false;
-
-            form.addEventListener('input', function() {
-                const currentData = new FormData(form);
-                hasChanges = false;
-                
-                for (let [key, value] of currentData.entries()) {
-                    if (originalData.get(key) !== value) {
-                        hasChanges = true;
-                        break;
-                    }
-                }
-
-                // Visual indicator for changes
-                if (hasChanges) {
-                    form.style.borderLeft = '4px solid #ffc107';
-                } else {
-                    form.style.borderLeft = 'none';
-                }
-            });
-
-            // Warn before leaving with unsaved changes
-            window.addEventListener('beforeunload', function(e) {
-                if (hasChanges) {
-                    const confirmationMessage = 'You have unsaved changes. Are you sure you want to leave?';
-                    e.returnValue = confirmationMessage;
-                    return confirmationMessage;
-                }
-            });
-        });
-    </script>
+    
+    <h1>Update Bug</h1>
+    
+    <form th:action="@{/bugs/update}" th:object="${bug}" method="post">
+        <input type="hidden" th:field="*{id}">
+        <input type="hidden" th:field="*{live}">
+        
+        <div class="form-group">
+            <label for="project">Project:</label>
+            <input type="text" id="project" th:field="*{project}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="bugNumber">Bug Number:</label>
+            <input type="text" id="bugNumber" th:field="*{bugNumber}">
+        </div>
+        
+        <div class="form-group">
+            <label for="issue">Issue Description:</label>
+            <textarea id="issue" th:field="*{issue}" rows="3" required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="severity">Severity:</label>
+            <select id="severity" th:field="*{severity}" required>
+                <option th:each="sev : ${severities}" 
+                        th:value="${sev}" 
+                        th:text="${sev + ' - ' + (sev.name() == 'S1' ? 'Critical' : sev.name() == 'S2' ? 'Major' : 'Minor')}"
+                        th:selected="${sev == bug.severity}"></option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="priority">Priority:</label>
+            <select id="priority" th:field="*{priority}" required>
+                <option th:each="pri : ${priorities}" 
+                        th:value="${pri}" 
+                        th:text="${pri + ' - ' + (pri.name() == 'P1' ? 'High' : pri.name() == 'P2' ? 'Medium' : 'Low')}"
+                        th:selected="${pri == bug.priority}"></option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="status">Status:</label>
+            <select id="status" th:field="*{status}" required>
+                <option th:each="stage : ${stages}" 
+                        th:value="${stage}" 
+                        th:text="${stage.name() == 'DEV' ? 'In Development' : stage.name() == 'QA' ? 'In QA' : 'Resolved'}"
+                        th:selected="${stage == bug.status}"></option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="remarks">Remarks:</label>
+            <textarea id="remarks" th:field="*{remarks}" rows="2"></textarea>
+        </div>
+        
+        <button type="submit">Update Bug</button>
+        <button type="button" onclick="window.location.href='/'">Cancel</button>
+    </form>
 </body>
 </html>
