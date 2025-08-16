@@ -8,7 +8,7 @@ public class OfferBeezApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(OfferBeezApplication.class, args);
-		System.out.println("successfully lunch");
+		System.out.println("successfully launch");
 	}
 
 }	

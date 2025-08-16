@@ -6,16 +6,75 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #f7f7f7; }
-        h1 { margin-bottom: 8px; color: #333; }
+        .dashboard-container { max-width: 1200px; margin: 0 auto; }
+        .charts-row { display: flex; justify-content: space-between; margin-bottom: 30px; gap: 15px; }
+        .chart-container { 
+            flex: 1; 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-width: 300px;
+        }
+        .chart-container.total-chart {
+            max-width: 100%;
+            width: 100%;
+        }
+        .chart-container h3 { 
+            text-align: center; 
+            margin: 0 0 15px 0; 
+            color: #333; 
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .no-data-message {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-top: 100px;
+            font-size: 14px;
+        }
+        .debug-info {
+            background: #e9ecef;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            display: none;
+        }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 24px; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background: #f7f7f7; font-weight: bold; }
+        h1 { margin-bottom: 8px; color: #333; text-align: center; }
         h2 { color: #555; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-        .actions a { margin-right: 8px; text-decoration: none; }
+        .actions a { margin-right: 8px; text-decoration: none; font-size: 11px; }
         .actions a:hover { text-decoration: underline; }
-        .toolbar { margin: 12px 0 20px; }
-        .add-btn { background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; }
+        .toolbar { margin: 12px 0 20px; text-align: center; }
+        .add-btn { 
+            background: #28a745; 
+            color: white; 
+            padding: 10px 15px; 
+            text-decoration: none; 
+            border-radius: 4px;
+            font-weight: bold;
+        }
         .add-btn:hover { background: #218838; }
+        .debug-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-size: 12px;
+        }
+        .debug-btn:hover { background: #545b62; }
         .edit-btn { color: #007bff; }
         .delete-btn { color: #dc3545; }
         .severity-s1 { color: #dc3545; font-weight: bold; }
@@ -24,168 +83,592 @@
         .priority-p1 { color: #dc3545; font-weight: bold; }
         .priority-p2 { color: #fd7e14; font-weight: bold; }
         .priority-p3 { color: #28a745; font-weight: bold; }
+        .applicable { color: #28a745; font-weight: bold; }
+        .not-applicable { color: #6c757d; }
+        .applicability-cell { font-size: 10px; }
+        .summary-stats { 
+            display: flex; 
+            justify-content: space-around; 
+            margin: 20px 0; 
+            gap: 15px;
+        }
+        .stat-box { 
+            flex: 1;
+            background: linear-gradient(135deg, #007bff, #0056b3); 
+            color: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-number { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+        .stat-label { font-size: 14px; opacity: 0.9; }
     </style>
 </head>
 <body>
-    <h1>Bug Tracking Dashboard</h1>
+    <div class="dashboard-container">
+        <h1>🐛 Bug Tracking Dashboard</h1>
 
-    <div class="toolbar">
-        <a href="/bugs/add" class="add-btn">+ Add New Bug</a>
-    </div>
+        <div class="toolbar">
+            <a href="/bugs/add" class="add-btn">+ Add New Bug</a>
+            <a href="/debug-chart" target="_blank" class="debug-btn">Debug Data</a>
+        </div>
 
-    <!-- Bug statistics chart -->
-    <canvas id="bugChart" width="600" height="240"></canvas>
+        <!-- Summary Statistics -->
+        <div class="summary-stats">
+            <div class="stat-box">
+                <div class="stat-number" th:text="${stats.inDev}">0</div>
+                <div class="stat-label">In Development</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" th:text="${stats.inQA}">0</div>
+                <div class="stat-label">In QA</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" th:text="${stats.totalLive}">0</div>
+                <div class="stat-label">Total Live</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" th:text="${stats.resolved}">0</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+        </div>
 
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        var stats = /*[[${stats}]]*/ {};
-        var chartData = [
-            stats.inDev || 0,
-            stats.inQA || 0,
-            stats.totalLive || 0,
-            stats.resolved || 0
-        ];
+        <!-- Debug Information -->
+        <div class="debug-info" id="debugInfo">
+            <strong>Debug Info:</strong> Loading chart data...
+        </div>
 
-        var ctx = document.getElementById('bugChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['In Dev', 'In QA', 'Total Live', 'Resolved'],
-                datasets: [{
-                    label: 'Bug Count',
-                    data: chartData,
-                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0']
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    title: { display: true, text: 'Bug Status Overview' }
-                },
-                scales: {
-                    y: { beginAtZero: true, ticks: { precision: 0 } }
+        <!-- Total Issues Chart (Full Width) -->
+        <div class="charts-row">
+            <div class="chart-container total-chart">
+                <h3>📈 Total Issues Overview - All Stages Combined</h3>
+                <div class="chart-wrapper">
+                    <canvas id="totalChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage-Specific Charts -->
+        <div class="charts-row">
+            <div class="chart-container">
+                <h3>📊 In Development - Severity & Priority by User Type</h3>
+                <div class="chart-wrapper">
+                    <canvas id="inDevChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>🔍 In QA - Severity & Priority by User Type</h3>
+                <div class="chart-wrapper">
+                    <canvas id="inQAChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>✅ Resolved - Severity & Priority by User Type</h3>
+                <div class="chart-wrapper">
+                    <canvas id="resolvedChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            var chartData = /*[[${chartData}]]*/ {};
+            var totalChartData = /*[[${totalChartData}]]*/ {};
+            
+            console.log("=== CHART DATA ANALYSIS ===");
+            console.log("Received chartData:", chartData);
+            console.log("Received totalChartData:", totalChartData);
+            console.log("Has stageData:", !!(chartData && chartData.stageData));
+            console.log("Has totalData:", !!(totalChartData && totalChartData.total));
+            
+            // Update debug info
+            document.getElementById('debugInfo').innerHTML = 
+                '<strong>Debug Info:</strong> Chart data loaded - Has stageData: ' + 
+                (!!(chartData && chartData.stageData)) + 
+                ', Has totalData: ' + (!!(totalChartData && totalChartData.total)) +
+                ' | <a href="/debug-chart" target="_blank">View Raw Data</a>';
+
+            // Create Total Issues Chart
+            function createTotalChart() {
+                var canvas = document.getElementById('totalChart');
+                if (!canvas) {
+                    console.error('Total chart canvas not found');
+                    return;
                 }
+                
+                var ctx = canvas.getContext('2d');
+                
+                if (!totalChartData || !totalChartData.total) {
+                    console.warn('No total chart data available');
+                    canvas.parentNode.innerHTML = '<div class="no-data-message">No total data available<br><small>Add some bugs to see total analytics</small></div>';
+                    return;
+                }
+                
+                var data = totalChartData.total;
+                var adminData = data.admin || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                var newUserData = data.newUser || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                var salesData = data.sales || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                var partnerData = data.partner || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                
+                console.log("Total chart data:");
+                console.log("Admin:", adminData);
+                console.log("NewUser:", newUserData);
+                console.log("Sales:", salesData);
+                console.log("Partner:", partnerData);
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Admin', 'New User', 'Sales', 'Partner'],
+                        datasets: [
+                            {
+                                label: 'S1 (Critical)',
+                                data: [adminData.S1, newUserData.S1, salesData.S1, partnerData.S1],
+                                backgroundColor: '#dc3545',
+                                borderColor: '#b02a37',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'S2 (Major)',
+                                data: [adminData.S2, newUserData.S2, salesData.S2, partnerData.S2],
+                                backgroundColor: '#fd7e14',
+                                borderColor: '#dc6a02',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'S3 (Minor)',
+                                data: [adminData.S3, newUserData.S3, salesData.S3, partnerData.S3],
+                                backgroundColor: '#28a745',
+                                borderColor: '#1e7e34',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'P1 (High)',
+                                data: [adminData.P1, newUserData.P1, salesData.P1, partnerData.P1],
+                                backgroundColor: '#6f42c1',
+                                borderColor: '#5a359a',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'P2 (Medium)',
+                                data: [adminData.P2, newUserData.P2, salesData.P2, partnerData.P2],
+                                backgroundColor: '#20c997',
+                                borderColor: '#17a085',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'P3 (Low)',
+                                data: [adminData.P3, newUserData.P3, salesData.P3, partnerData.P3],
+                                backgroundColor: '#6c757d',
+                                borderColor: '#545b62',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 11 },
+                                    padding: 15,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                titleFont: { size: 12, weight: 'bold' },
+                                bodyFont: { size: 11 },
+                                callbacks: {
+                                    title: function(context) {
+                                        return context[0].label + ' Users - Total Issues';
+                                    },
+                                    label: function(context) {
+                                        var label = context.dataset.label;
+                                        var value = context.parsed.y;
+                                        var type = label.startsWith('S') ? 'Severity' : 'Priority';
+                                        return type + ' ' + label + ': ' + value + ' total issue' + 
+                                               (value !== 1 ? 's' : '');
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0, font: { size: 10 } },
+                                grid: { color: 'rgba(0,0,0,0.1)' }
+                            },
+                            x: {
+                                ticks: { font: { size: 10, weight: 'bold' } },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+                
+                console.log("✅ Total chart created successfully");
             }
-        });
-        /*]]>*/
-    </script>
 
-    <hr/>
+            function createUserTypeChart(canvasId, stageData, title, stageName) {
+                console.log("Creating chart for:", canvasId, "with stage:", stageName);
+                console.log("Stage data received:", stageData);
+                
+                var canvas = document.getElementById(canvasId);
+                if (!canvas) {
+                    console.error('Canvas element not found:', canvasId);
+                    return;
+                }
+                
+                var ctx = canvas.getContext('2d');
+                
+                // Initialize with empty data structure including priority
+                var defaultData = {
+                    admin: {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0},
+                    newUser: {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0},
+                    sales: {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0},
+                    partner: {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0}
+                };
+                
+                // Use real data if available, otherwise use defaults
+                var data = stageData || defaultData;
+                
+                // Safely extract data with null checks
+                var adminData = data.admin || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                var newUserData = data.newUser || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                var salesData = data.sales || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                var partnerData = data.partner || {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
+                
+                // Calculate if we have any data to show (both severity and priority)
+                var hasData = (adminData.S1 + adminData.S2 + adminData.S3 + adminData.P1 + adminData.P2 + adminData.P3 +
+                              newUserData.S1 + newUserData.S2 + newUserData.S3 + newUserData.P1 + newUserData.P2 + newUserData.P3 +
+                              salesData.S1 + salesData.S2 + salesData.S3 + salesData.P1 + salesData.P2 + salesData.P3 +
+                              partnerData.S1 + partnerData.S2 + partnerData.S3 + partnerData.P1 + partnerData.P2 + partnerData.P3) > 0;
+                
+                console.log("Chart data for", stageName, ":");
+                console.log("  Admin:", adminData);
+                console.log("  NewUser:", newUserData);
+                console.log("  Sales:", salesData);
+                console.log("  Partner:", partnerData);
+                console.log("  Has data:", hasData);
+                
+                // If no data, show a message instead of empty chart
+                if (!hasData) {
+                    var chartWrapper = canvas.parentNode;
+                    chartWrapper.innerHTML = '<div class="no-data-message">No bugs in ' + stageName + ' stage</div>';
+                    return;
+                }
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Admin', 'New User', 'Sales', 'Partner'],
+                        datasets: [
+                            {
+                                label: 'S1 (Critical)',
+                                data: [adminData.S1, newUserData.S1, salesData.S1, partnerData.S1],
+                                backgroundColor: '#dc3545',
+                                borderColor: '#b02a37',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'S2 (Major)',
+                                data: [adminData.S2, newUserData.S2, salesData.S2, partnerData.S2],
+                                backgroundColor: '#fd7e14',
+                                borderColor: '#dc6a02',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'S3 (Minor)',
+                                data: [adminData.S3, newUserData.S3, salesData.S3, partnerData.S3],
+                                backgroundColor: '#28a745',
+                                borderColor: '#1e7e34',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'P1 (High)',
+                                data: [adminData.P1, newUserData.P1, salesData.P1, partnerData.P1],
+                                backgroundColor: '#6f42c1',
+                                borderColor: '#5a359a',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'P2 (Medium)',
+                                data: [adminData.P2, newUserData.P2, salesData.P2, partnerData.P2],
+                                backgroundColor: '#20c997',
+                                borderColor: '#17a085',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'P3 (Low)',
+                                data: [adminData.P3, newUserData.P3, salesData.P3, partnerData.P3],
+                                backgroundColor: '#6c757d',
+                                borderColor: '#545b62',
+                                borderWidth: 1,
+                                borderRadius: 3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 10 },
+                                    padding: 10,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                titleFont: { size: 12, weight: 'bold' },
+                                bodyFont: { size: 11 },
+                                callbacks: {
+                                    title: function(context) {
+                                        return context[0].label + ' Users - ' + stageName;
+                                    },
+                                    label: function(context) {
+                                        var label = context.dataset.label;
+                                        var value = context.parsed.y;
+                                        var type = label.startsWith('S') ? 'Severity' : 'Priority';
+                                        return type + ' ' + label + ': ' + value + ' bug' + (value !== 1 ? 's' : '');
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0, font: { size: 10 } },
+                                grid: { color: 'rgba(0,0,0,0.1)' }
+                            },
+                            x: {
+                                ticks: { font: { size: 10, weight: 'bold' } },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+                
+                console.log("✅ Chart created successfully for", stageName);
+            }
 
-    <!-- Section: In Dev -->
-    <h2>In Development (<span th:text="${#lists.size(inDevBugs)}">0</span>)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Project</th>
-                <th>Bug #</th>
-                <th>Issue</th>
-                <th>Severity</th>
-                <th>Priority</th>
-                <th>Remarks</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="bug : ${inDevBugs}">
-                <td th:text="${bug.id}">1</td>
-                <td th:text="${bug.project}">Project</td>
-                <td th:text="${bug.bugNumber}">BUG-001</td>
-                <td th:text="${bug.issue}">Issue</td>
-                <td th:text="${bug.severity}" 
-                    th:class="${'severity-' + bug.severity.name().toLowerCase()}">S1</td>
-                <td th:text="${bug.priority}"
-                    th:class="${'priority-' + bug.priority.name().toLowerCase()}">P1</td>
-                <td th:text="${bug.remarks}">Notes</td>
-                <td class="actions">
-                    <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
-                    <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
-                       onclick="return confirm('Delete this bug?');">Delete</a>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(inDevBugs)}">
-                <td colspan="8">No bugs in development.</td>
-            </tr>
-        </tbody>
-    </table>
+            // Main chart creation logic
+            console.log("=== CREATING CHARTS ===");
+            
+            try {
+                // Create total chart first
+                createTotalChart();
+                
+                // Create stage-specific charts
+                if (chartData && chartData.stageData) {
+                    console.log("Creating stage-specific charts...");
+                    createUserTypeChart('inDevChart', chartData.stageData.inDev, 'In Development', 'Development');
+                    createUserTypeChart('inQAChart', chartData.stageData.inQA, 'In QA', 'QA');
+                    createUserTypeChart('resolvedChart', chartData.stageData.resolved, 'Resolved', 'Resolved');
+                    console.log("All stage charts created");
+                } else {
+                    console.warn("❌ No stage chart data available");
+                    ['inDevChart', 'inQAChart', 'resolvedChart'].forEach(function(canvasId) {
+                        var canvas = document.getElementById(canvasId);
+                        if (canvas) {
+                            var chartWrapper = canvas.parentNode;
+                            chartWrapper.innerHTML = '<div class="no-data-message">No data available<br><small>Add some bugs to see charts</small></div>';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("❌ Fatal error in chart creation:", error);
+                document.getElementById('debugInfo').innerHTML = 
+                    '<strong>Error:</strong> ' + error.message + ' | <a href="/debug-chart" target="_blank">Debug</a>';
+                document.getElementById('debugInfo').style.display = 'block';
+            }
+            
+            /*]]>*/
+        </script>
 
-    <!-- Section: In QA -->
-    <h2>In QA (<span th:text="${#lists.size(inQaBugs)}">0</span>)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Project</th>
-                <th>Bug #</th>
-                <th>Issue</th>
-                <th>Severity</th>
-                <th>Priority</th>
-                <th>Remarks</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="bug : ${inQaBugs}">
-                <td th:text="${bug.id}">1</td>
-                <td th:text="${bug.project}">Project</td>
-                <td th:text="${bug.bugNumber}">BUG-002</td>
-                <td th:text="${bug.issue}">Issue</td>
-                <td th:text="${bug.severity}"
-                    th:class="${'severity-' + bug.severity.name().toLowerCase()}">S2</td>
-                <td th:text="${bug.priority}"
-                    th:class="${'priority-' + bug.priority.name().toLowerCase()}">P2</td>
-                <td th:text="${bug.remarks}">Notes</td>
-                <td class="actions">
-                    <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
-                    <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
-                       onclick="return confirm('Delete this bug?');">Delete</a>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(inQaBugs)}">
-                <td colspan="8">No bugs in QA.</td>
-            </tr>
-        </tbody>
-    </table>
+        <hr style="margin: 40px 0;"/>
 
-    <!-- Section: Resolved -->
-    <h2>Resolved (<span th:text="${#lists.size(resolvedBugs)}">0</span>)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Project</th>
-                <th>Bug #</th>
-                <th>Issue</th>
-                <th>Severity</th>
-                <th>Priority</th>
-                <th>Remarks</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="bug : ${resolvedBugs}">
-                <td th:text="${bug.id}">1</td>
-                <td th:text="${bug.project}">Project</td>
-                <td th:text="${bug.bugNumber}">BUG-003</td>
-                <td th:text="${bug.issue}">Issue</td>
-                <td th:text="${bug.severity}"
-                    th:class="${'severity-' + bug.severity.name().toLowerCase()}">S3</td>
-                <td th:text="${bug.priority}"
-                    th:class="${'priority-' + bug.priority.name().toLowerCase()}">P3</td>
-                <td th:text="${bug.remarks}">Notes</td>
-                <td class="actions">
-                    <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
-                    <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
-                       onclick="return confirm('Delete this bug?');">Delete</a>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(resolvedBugs)}">
-                <td colspan="8">No resolved bugs.</td>
-            </tr>
-        </tbody>
-    </table>
+        <!-- Section: In Dev -->
+        <h2>🔧 In Development (<span th:text="${#lists.size(inDevBugs)}">0</span>)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Project</th>
+                    <th>Bug #</th>
+                    <th>Issue</th>
+                    <th>Severity</th>
+                    <th>Priority</th>
+                    <th>New User</th>
+                    <th>Partner</th>
+                    <th>Admin</th>
+                    <th>Sales</th>
+                    <th>Remarks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="bug : ${inDevBugs}">
+                    <td th:text="${bug.id}">1</td>
+                    <td th:text="${bug.project}">Project</td>
+                    <td th:text="${bug.bugNumber}">BUG-001</td>
+                    <td th:text="${bug.issue}">Issue</td>
+                    <td th:text="${bug.severity}" 
+                        th:class="${'severity-' + bug.severity.name().toLowerCase()}">S1</td>
+                    <td th:text="${bug.priority}"
+                        th:class="${'priority-' + bug.priority.name().toLowerCase()}">P1</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.newUser == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.newUser == 'APPLICABLE' ? 'Y' : bug.newUser == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.partner == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.partner == 'APPLICABLE' ? 'Y' : bug.partner == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.admin == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.admin == 'APPLICABLE' ? 'Y' : bug.admin == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.sales == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.sales == 'APPLICABLE' ? 'Y' : bug.sales == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td th:text="${bug.remarks}">Notes</td>
+                    <td class="actions">
+                        <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
+                        <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
+                           onclick="return confirm('Delete this bug?');">Delete</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(inDevBugs)}">
+                    <td colspan="12" style="text-align: center; color: #666; font-style: italic;">No bugs in development.</td>
+                </tr>
+            </tbody>
+        </table>
 
+        <!-- Section: In QA -->
+        <h2>🔍 In QA (<span th:text="${#lists.size(inQaBugs)}">0</span>)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Project</th>
+                    <th>Bug #</th>
+                    <th>Issue</th>
+                    <th>Severity</th>
+                    <th>Priority</th>
+                    <th>New User</th>
+                    <th>Partner</th>
+                    <th>Admin</th>
+                    <th>Sales</th>
+                    <th>Remarks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="bug : ${inQaBugs}">
+                    <td th:text="${bug.id}">1</td>
+                    <td th:text="${bug.project}">Project</td>
+                    <td th:text="${bug.bugNumber}">BUG-002</td>
+                    <td th:text="${bug.issue}">Issue</td>
+                    <td th:text="${bug.severity}"
+                        th:class="${'severity-' + bug.severity.name().toLowerCase()}">S2</td>
+                    <td th:text="${bug.priority}"
+                        th:class="${'priority-' + bug.priority.name().toLowerCase()}">P2</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.newUser == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.newUser == 'APPLICABLE' ? 'Y' : bug.newUser == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.partner == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.partner == 'APPLICABLE' ? 'Y' : bug.partner == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.admin == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.admin == 'APPLICABLE' ? 'Y' : bug.admin == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.sales == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.sales == 'APPLICABLE' ? 'Y' : bug.sales == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td th:text="${bug.remarks}">Notes</td>
+                    <td class="actions">
+                        <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
+                        <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
+                           onclick="return confirm('Delete this bug?');">Delete</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(inQaBugs)}">
+                    <td colspan="12" style="text-align: center; color: #666; font-style: italic;">No bugs in QA.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Section: Resolved -->
+        <h2>✅ Resolved (<span th:text="${#lists.size(resolvedBugs)}">0</span>)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Project</th>
+                    <th>Bug #</th>
+                    <th>Issue</th>
+                    <th>Severity</th>
+                    <th>Priority</th>
+                    <th>New User</th>
+                    <th>Partner</th>
+                    <th>Admin</th>
+                    <th>Sales</th>
+                    <th>Remarks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="bug : ${resolvedBugs}">
+                    <td th:text="${bug.id}">1</td>
+                    <td th:text="${bug.project}">Project</td>
+                    <td th:text="${bug.bugNumber}">BUG-003</td>
+                    <td th:text="${bug.issue}">Issue</td>
+                    <td th:text="${bug.severity}"
+                        th:class="${'severity-' + bug.severity.name().toLowerCase()}">S3</td>
+                    <td th:text="${bug.priority}"
+                        th:class="${'priority-' + bug.priority.name().toLowerCase()}">P3</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.newUser == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.newUser == 'APPLICABLE' ? 'Y' : bug.newUser == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.partner == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.partner == 'APPLICABLE' ? 'Y' : bug.partner == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.admin == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.admin == 'APPLICABLE' ? 'Y' : bug.admin == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td class="applicability-cell" 
+                        th:class="${bug.sales == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                        th:text="${bug.sales == 'APPLICABLE' ? 'Y' : bug.sales == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
+                    <td th:text="${bug.remarks}">Notes</td>
+                    <td class="actions">
+                        <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
+                        <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
+                           onclick="return confirm('Delete this bug?');">Delete</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(resolvedBugs)}">
+                    <td colspan="12" style="text-align: center; color: #666; font-style: italic;">No resolved bugs.</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
 </body>
 </html>

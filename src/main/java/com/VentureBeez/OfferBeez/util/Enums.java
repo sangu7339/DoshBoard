@@ -11,4 +11,14 @@ public final class Enums {
 
     // Optional granular statuses per stage (for the sheet-like columns)
     public enum StageStatus { OPEN, PASS, FAIL, PENDING }
+    
+    // New enum for Applicable/Not Applicable fields
+    public enum Applicability { APPLICABLE, NOT_APPLICABLE }
+    
+    // Helper method to get display text
+    public static String getApplicabilityDisplay(String value) {
+        if ("APPLICABLE".equals(value)) return "Applicable";
+        if ("NOT_APPLICABLE".equals(value)) return "Not Applicable";
+        return value;
+    }
 }
