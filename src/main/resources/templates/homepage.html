@@ -2,215 +2,894 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bug Tracking Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .dashboard-container { max-width: 1200px; margin: 0 auto; }
-        .charts-row { display: flex; justify-content: space-between; margin-bottom: 30px; gap: 15px; }
-        .chart-container { 
-            flex: 1; 
-            background: #f8f9fa; 
-            padding: 15px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            min-width: 300px;
+        :root {
+            /* Light Mode Variables */
+            --primary-bg: #ffffff;
+            --secondary-bg: #f8f9fa;
+            --accent-bg: #e9ecef;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+            --text-primary: #2c3e50;
+            --text-secondary: #6c757d;
+            --text-light: #ffffff;
+            --border-color: #dee2e6;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --shadow-light: 0 1px 3px rgba(0,0,0,0.1);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --status-open: #dc3545;
+            --status-progress: #fd7e14;
+            --status-closed: #28a745;
+            --chart-bg: rgba(255,255,255,0.95);
         }
-        .chart-container.total-chart {
-            max-width: 100%;
-            width: 100%;
+
+        [data-theme="dark"] {
+            --primary-bg: #1a1a1a;
+            --secondary-bg: #2d2d2d;
+            --accent-bg: #3a3a3a;
+            --sidebar-bg: #0d1117;
+            --sidebar-hover: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-light: #e6edf3;
+            --border-color: #30363d;
+            --shadow: 0 2px 10px rgba(0,0,0,0.3);
+            --shadow-light: 0 1px 3px rgba(0,0,0,0.2);
+            --gradient-primary: linear-gradient(135deg, #434343 0%, #000000 100%);
+            --gradient-success: linear-gradient(135deg, #2d5016 0%, #3e8e41 100%);
+            --gradient-warning: linear-gradient(135deg, #8b2635 0%, #c62828 100%);
+            --gradient-info: linear-gradient(135deg, #1565c0 0%, #0277bd 100%);
+            --chart-bg: rgba(45,45,45,0.95);
         }
-        .chart-container h3 { 
-            text-align: center; 
-            margin: 0 0 15px 0; 
-            color: #333; 
-            font-size: 14px;
+
+        [data-theme="contrast"] {
+            --primary-bg: #000000;
+            --secondary-bg: #1a1a1a;
+            --accent-bg: #333333;
+            --sidebar-bg: #000000;
+            --sidebar-hover: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-light: #ffffff;
+            --border-color: #666666;
+            --shadow: 0 2px 10px rgba(255,255,255,0.1);
+            --shadow-light: 0 1px 3px rgba(255,255,255,0.05);
+            --gradient-primary: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
+            --gradient-success: linear-gradient(135deg, #00ff00 0%, #66ff66 100%);
+            --gradient-warning: linear-gradient(135deg, #ffff00 0%, #ff6600 100%);
+            --gradient-info: linear-gradient(135deg, #0099ff 0%, #66ccff 100%);
+            --status-open: #ff0000;
+            --status-progress: #ffaa00;
+            --status-closed: #00ff00;
+            --chart-bg: rgba(26,26,26,0.95);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-layout {
+            display: block; /* changed from flex since sidebar is removed */
+            min-height: 100vh;
+        }
+
+        /* REMOVED sidebar styles usage; keeping variables intact for compatibility */
+
+        /* Main Content: occupy full width since sidebar is removed */
+        .main-content {
+            flex: 1;
+            margin-left: 0; /* remove left space */
+            transition: all 0.3s ease;
+            background: var(--secondary-bg);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary-bg);
+            padding: 20px 30px;
+            box-shadow: var(--shadow-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-switcher {
+            display: flex;
+            gap: 8px;
+            background: var(--accent-bg);
+            padding: 4px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .theme-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .theme-btn.active {
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-light);
+        }
+
+        .profile-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
             font-weight: bold;
+            font-size: 14px;
         }
+
+        /* Content Area */
+        .content {
+            padding: 30px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--primary-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .stat-card.dev::before { background: var(--gradient-warning); }
+        .stat-card.qa::before { background: var(--gradient-info); }
+        .stat-card.live::before { background: var(--gradient-success); }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: var(--accent-bg);
+            color: var(--text-primary);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Charts Section */
+        .charts-section { margin-bottom: 40px; }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .charts-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
+
+        .chart-container {
+            background: var(--chart-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
         .chart-wrapper {
             position: relative;
             height: 300px;
             width: 100%;
         }
+
         .no-data-message {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            margin-top: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text-secondary);
             font-size: 14px;
         }
-        .debug-info {
-            background: #e9ecef;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 12px;
-            display: none;
+
+        .no-data-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+
+        /* Table Styles */
+        .table-section {
+            background: var(--primary-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 30px;
         }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 24px; font-size: 12px; }
-        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-        th { background: #f7f7f7; font-weight: bold; }
-        h1 { margin-bottom: 8px; color: #333; text-align: center; }
-        h2 { color: #555; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-        .actions a { margin-right: 8px; text-decoration: none; font-size: 11px; }
-        .actions a:hover { text-decoration: underline; }
-        .toolbar { margin: 12px 0 20px; text-align: center; }
-        .add-btn { 
-            background: #28a745; 
-            color: white; 
-            padding: 10px 15px; 
-            text-decoration: none; 
-            border-radius: 4px;
-            font-weight: bold;
+
+        .table-header {
+            padding: 20px 24px;
+            background: var(--accent-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .add-btn:hover { background: #218838; }
-        .debug-btn {
-            background: #6c757d;
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-btn {
+            background: var(--gradient-success);
             color: white;
-            padding: 8px 12px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
             text-decoration: none;
-            border-radius: 4px;
-            margin-left: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .add-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+        .table-wrapper { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        th {
+            background: var(--secondary-bg);
+            padding: 12px 16px;
+            text-align: left;
             font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
         }
-        .debug-btn:hover { background: #545b62; }
-        .edit-btn { color: #007bff; }
-        .delete-btn { color: #dc3545; }
-        .severity-s1 { color: #dc3545; font-weight: bold; }
-        .severity-s2 { color: #fd7e14; font-weight: bold; }
-        .severity-s3 { color: #28a745; font-weight: bold; }
-        .priority-p1 { color: #dc3545; font-weight: bold; }
-        .priority-p2 { color: #fd7e14; font-weight: bold; }
-        .priority-p3 { color: #28a745; font-weight: bold; }
-        .applicable { color: #28a745; font-weight: bold; }
-        .not-applicable { color: #6c757d; }
-        .applicability-cell { font-size: 10px; }
-        .summary-stats { 
-            display: flex; 
-            justify-content: space-around; 
-            margin: 20px 0; 
-            gap: 15px;
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            vertical-align: middle;
         }
-        .stat-box { 
-            flex: 1;
-            background: linear-gradient(135deg, #007bff, #0056b3); 
-            color: white; 
-            padding: 20px; 
-            border-radius: 8px; 
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+        tr:hover { background: var(--accent-bg); }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .stat-number { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
-        .stat-label { font-size: 14px; opacity: 0.9; }
+
+        .status-open { background: rgba(220,53,69,0.1); color: var(--status-open); border: 1px solid rgba(220,53,69,0.2); }
+        .status-progress { background: rgba(253,126,20,0.1); color: var(--status-progress); border: 1px solid rgba(253,126,20,0.2); }
+        .status-closed { background: rgba(40,167,69,0.1); color: var(--status-closed); border: 1px solid rgba(40,167,69,0.2); }
+
+        .severity-s1 { color: var(--status-open); font-weight: 600; }
+        .severity-s2 { color: var(--status-progress); font-weight: 600; }
+        .severity-s3 { color: var(--status-closed); font-weight: 600; }
+
+        .priority-p1 { color: var(--status-open); font-weight: 600; }
+        .priority-p2 { color: var(--status-progress); font-weight: 600; }
+        .priority-p3 { color: var(--status-closed); font-weight: 600; }
+
+        .applicable { color: var(--status-closed); font-weight: 600; }
+        .not-applicable { color: var(--text-secondary); }
+
+        .actions { display: flex; gap: 8px; }
+
+        .action-btn {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .edit-btn { background: rgba(13,110,253,0.1); color: #0d6efd; border: 1px solid rgba(13,110,253,0.2); }
+        .edit-btn:hover { background: #0d6efd; color: white; }
+
+        .delete-btn { background: rgba(220,53,69,0.1); color: var(--status-open); border: 1px solid rgba(220,53,69,0.2); }
+        .delete-btn:hover { background: var(--status-open); color: white; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.3; }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content { margin-left: 0; }
+            .stats-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 15px 20px; }
+            .content { padding: 20px; }
+            .header-title { font-size: 20px; }
+            .table-wrapper { font-size: 12px; }
+            .theme-switcher { flex-direction: column; gap: 4px; }
+        }
+
+        /* 2x2 charts grid layout (keep if you already added earlier) */
+        .charts-grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 1024px) { .charts-grid-2x2 { grid-template-columns: 1fr; } }
     </style>
 </head>
-<body>
-    <div class="dashboard-container">
-        <h1>🐛 Bug Tracking Dashboard</h1>
+<body data-theme="light">
+    <div class="dashboard-layout">
 
-        <div class="toolbar">
-            <a href="/bugs/add" class="add-btn">+ Add New Bug</a>
-            <a href="/debug-chart" target="_blank" class="debug-btn">Debug Data</a>
-        </div>
+        <!-- REMOVED Sidebar Navigation completely -->
 
-        <!-- Summary Statistics -->
-        <div class="summary-stats">
-            <div class="stat-box">
-                <div class="stat-number" th:text="${stats.inDev}">0</div>
-                <div class="stat-label">In Development</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-number" th:text="${stats.inQA}">0</div>
-                <div class="stat-label">In QA</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-number" th:text="${stats.totalLive}">0</div>
-                <div class="stat-label">Total Live</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-number" th:text="${stats.resolved}">0</div>
-                <div class="stat-label">Resolved</div>
-            </div>
-        </div>
-
-        <!-- Debug Information -->
-        <div class="debug-info" id="debugInfo">
-            <strong>Debug Info:</strong> Loading chart data...
-        </div>
-
-        <!-- Total Live Issues Chart (Full Width) -->
-        <div class="charts-row">
-            <div class="chart-container total-chart">
-                <h3>🔥 Total Live Issues (Dev + QA) - Stacked Severity & Priority</h3>
-                <div class="chart-wrapper">
-                    <canvas id="totalLiveChart"></canvas>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <!-- removed mobile menu button since sidebar is gone -->
+                    <h1 class="header-title">
+                        <span>🐛</span>
+                        Bug Tracking Dashboard
+                    </h1>
                 </div>
-            </div>
-        </div>
-
-        <!-- Stage-Specific Charts -->
-        <div class="charts-row">
-            <div class="chart-container">
-                <h3>📊 In Development - Stacked Severity & Priority</h3>
-                <div class="chart-wrapper">
-                    <canvas id="inDevChart"></canvas>
+                <div class="user-profile">
+                    <div class="theme-switcher">
+                        <button class="theme-btn active" data-theme="light">Light</button>
+                        <button class="theme-btn" data-theme="dark">Dark</button>
+                        <button class="theme-btn" data-theme="contrast">Contrast</button>
+                    </div>
+                    <div class="profile-avatar">JD</div>
                 </div>
-            </div>
-            <div class="chart-container">
-                <h3>🔍 In QA - Stacked Severity & Priority</h3>
-                <div class="chart-wrapper">
-                    <canvas id="inQAChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-container">
-                <h3>✅ Resolved - Stacked Severity & Priority</h3>
-                <div class="chart-wrapper">
-                    <canvas id="resolvedChart"></canvas>
-                </div>
-            </div>
-        </div>
+            </header>
 
-        <script th:inline="javascript">
-            /*<![CDATA[*/
-            // Enhanced data handling with null checks
-            var chartData = /*[[${chartData}]]*/ null;
-            var totalChartData = /*[[${totalChartData}]]*/ null;
-            
-            // Debug output
-            console.log("=== CHART DATA ANALYSIS ===");
-            console.log("Chart Data:", chartData);
-            console.log("Total Chart Data:", totalChartData);
-            
-            // Update debug info
-            document.getElementById('debugInfo').innerHTML = 
-                '<strong>Debug Info:</strong> Chart data loaded - ' + 
-                (chartData ? 'Has chart data' : 'No chart data') + 
-                ', ' + (totalChartData ? 'Has total data' : 'No total data') +
-                ' | <a href="/debug-chart" target="_blank">View Raw Data</a>';
-            document.getElementById('debugInfo').style.display = 'block';
+            <!-- Content -->
+            <div class="content">
+                <!-- Summary Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card dev">
+                        <div class="stat-header">
+                            <span class="stat-title">In Development</span>
+                            <span class="stat-icon">🔧</span>
+                        </div>
+                        <div class="stat-number" th:text="${stats.inDev}">12</div>
+                        <div class="stat-change">Active issues</div>
+                    </div>
+                    <div class="stat-card qa">
+                        <div class="stat-header">
+                            <span class="stat-title">In QA</span>
+                            <span class="stat-icon">🔍</span>
+                        </div>
+                        <div class="stat-number" th:text="${stats.inQA}">8</div>
+                        <div class="stat-change">Under testing</div>
+                    </div>
+                    <div class="stat-card live">
+                        <div class="stat-header">
+                            <span class="stat-title">Total Live</span>
+                            <span class="stat-icon">🔥</span>
+                        </div>
+                        <div class="stat-number" th:text="${stats.totalLive}">20</div>
+                        <div class="stat-change">Critical issues</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Resolved</span>
+                            <span class="stat-icon">✅</span>
+                        </div>
+                        <div class="stat-number" th:text="${stats.resolved}">45</div>
+                        <div class="stat-change">This month</div>
+                    </div>
+                </div>
 
-            // Industry-standard color scheme for severity and priority
-            const chartColors = {
-                severity: {
-                    S1: { bg: 'rgba(220, 53, 69, 0.8)', border: 'rgba(220, 53, 69, 1)' },      // Red
-                    S2: { bg: 'rgba(253, 126, 20, 0.8)', border: 'rgba(253, 126, 20, 1)' },    // Orange
-                    S3: { bg: 'rgba(255, 193, 7, 0.8)', border: 'rgba(255, 193, 7, 1)' }       // Yellow
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <h2 class="section-title">
+                        <span>📈</span>
+                        Issue Analytics
+                    </h2>
+
+                    <!-- 2x2 Grid: Row1 = In Dev, In QA; Row2 = Total Live, Resolved -->
+                    <div class="charts-grid charts-grid-2x2">
+                        <!-- Row 1 -->
+                        <div class="chart-container">
+                            <h3 class="chart-title">📊 In Development - Stacked Distribution</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="inDevChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <h3 class="chart-title">🔍 In QA - Stacked Distribution</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="inQAChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div class="chart-container">
+                            <h3 class="chart-title">🔥 Total Live Issues (Dev + QA) - Stacked Severity &amp; Priority</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="totalLiveChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <h3 class="chart-title">✅ Resolved - Stacked Distribution</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="resolvedChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Issues Tables -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2 class="table-title">
+                            <span>🔧</span>
+                            In Development (<span th:text="${#lists.size(inDevBugs)}">5</span>)
+                        </h2>
+                        <a href="/bugs/add" class="add-btn">
+                            <span>+</span>
+                            Add New Bug
+                        </a>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Project</th>
+                                    <th>Bug #</th>
+                                    <th>Issue</th>
+                                    <th>Status</th>
+                                    <th>Severity</th>
+                                    <th>Priority</th>
+                                    <th>New User</th>
+                                    <th>Partner</th>
+                                    <th>Admin</th>
+                                    <th>Sales</th>
+                                    <th>Remarks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="bug : ${inDevBugs}">
+                                    <td th:text="${bug.id}">1</td>
+                                    <td th:text="${bug.project}">Project Alpha</td>
+                                    <td th:text="${bug.bugNumber}">BUG-001</td>
+                                    <td th:text="${bug.issue}">Login form validation error</td>
+                                    <td><span class="status-badge status-progress">In Progress</span></td>
+                                    <td th:text="${bug.severity}" th:class="${'severity-' + bug.severity.name().toLowerCase()}">S1</td>
+                                    <td th:text="${bug.priority}" th:class="${'priority-' + bug.priority.name().toLowerCase()}">P1</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.newUser == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.newUser == 'APPLICABLE' ? 'Y' : bug.newUser == 'NOT_APPLICABLE' ? 'N' : ''}">Y</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.partner == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.partner == 'APPLICABLE' ? 'Y' : bug.partner == 'NOT_APPLICABLE' ? 'N' : ''}">N</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.admin == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.admin == 'APPLICABLE' ? 'Y' : bug.admin == 'NOT_APPLICABLE' ? 'N' : ''}">Y</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.sales == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.sales == 'APPLICABLE' ? 'Y' : bug.sales == 'NOT_APPLICABLE' ? 'N' : ''}">Y</td>
+                                    <td th:text="${bug.remarks}">Critical issue affecting user login</td>
+                                    <td class="actions">
+                                        <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="action-btn edit-btn">Edit</a>
+                                        <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="action-btn delete-btn"
+                                           onclick="return confirm('Delete this bug?');">Delete</a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(inDevBugs)}">
+                                    <td colspan="13" class="empty-state">
+                                        <div class="empty-icon">📝</div>
+                                        <div>No bugs in development</div>
+                                        <small>Create your first bug report to get started</small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2 class="table-title">
+                            <span>🔍</span>
+                            In QA (<span th:text="${#lists.size(inQaBugs)}">3</span>)
+                        </h2>
+                        <a href="/bugs/add" class="add-btn">
+                            <span>+</span>
+                            Add New Bug
+                        </a>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Project</th>
+                                    <th>Bug #</th>
+                                    <th>Issue</th>
+                                    <th>Status</th>
+                                    <th>Severity</th>
+                                    <th>Priority</th>
+                                    <th>New User</th>
+                                    <th>Partner</th>
+                                    <th>Admin</th>
+                                    <th>Sales</th>
+                                    <th>Remarks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="bug : ${inQaBugs}">
+                                    <td th:text="${bug.id}">2</td>
+                                    <td th:text="${bug.project}">Project Beta</td>
+                                    <td th:text="${bug.bugNumber}">BUG-002</td>
+                                    <td th:text="${bug.issue}">Dashboard chart rendering issue</td>
+                                    <td><span class="status-badge status-progress">Testing</span></td>
+                                    <td th:text="${bug.severity}" th:class="${'severity-' + bug.severity.name().toLowerCase()}">S2</td>
+                                    <td th:text="${bug.priority}" th:class="${'priority-' + bug.priority.name().toLowerCase()}">P2</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.newUser == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.newUser == 'APPLICABLE' ? 'Y' : bug.newUser == 'NOT_APPLICABLE' ? 'N' : ''}">N</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.partner == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.partner == 'APPLICABLE' ? 'Y' : bug.partner == 'NOT_APPLICABLE' ? 'N' : ''}">Y</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.admin == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.admin == 'APPLICABLE' ? 'Y' : bug.admin == 'NOT_APPLICABLE' ? 'N' : ''}">Y</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.sales == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.sales == 'APPLICABLE' ? 'Y' : bug.sales == 'NOT_APPLICABLE' ? 'N' : ''}">Y</td>
+                                    <td th:text="${bug.remarks}">Under QA review</td>
+                                    <td class="actions">
+                                        <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="action-btn edit-btn">Edit</a>
+                                        <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="action-btn delete-btn"
+                                           onclick="return confirm('Delete this bug?');">Delete</a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(inQaBugs)}">
+                                    <td colspan="13" class="empty-state">
+                                        <div class="empty-icon">🔍</div>
+                                        <div>No bugs in QA</div>
+                                        <small>No issues currently under testing</small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2 class="table-title">
+                            <span>✅</span>
+                            Resolved (<span th:text="${#lists.size(resolvedBugs)}">15</span>)
+                        </h2>
+                        <a href="/bugs/add" class="add-btn">
+                            <span>+</span>
+                            Add New Bug
+                        </a>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Project</th>
+                                    <th>Bug #</th>
+                                    <th>Issue</th>
+                                    <th>Status</th>
+                                    <th>Severity</th>
+                                    <th>Priority</th>
+                                    <th>New User</th>
+                                    <th>Partner</th>
+                                    <th>Admin</th>
+                                    <th>Sales</th>
+                                    <th>Remarks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="bug : ${resolvedBugs}">
+                                    <td th:text="${bug.id}">3</td>
+                                    <td th:text="${bug.project}">Project Gamma</td>
+                                    <td th:text="${bug.bugNumber}">BUG-003</td>
+                                    <td th:text="${bug.issue}">Email notification formatting</td>
+                                    <td><span class="status-badge status-closed">Resolved</span></td>
+                                    <td th:text="${bug.severity}" th:class="${'severity-' + bug.severity.name().toLowerCase()}">S3</td>
+                                    <td th:text="${bug.priority}" th:class="${'priority-' + bug.priority.name().toLowerCase()}">P3</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.newUser == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.newUser == 'APPLICABLE' ? 'Y' : bug.newUser == 'NOT_APPLICABLE' ? 'N' : ''}">Y</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.partner == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.partner == 'APPLICABLE' ? 'Y' : bug.partner == 'NOT_APPLICABLE' ? 'N' : ''}">N</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.admin == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.admin == 'APPLICABLE' ? 'Y' : bug.admin == 'NOT_APPLICABLE' ? 'N' : ''}">Y</td>
+                                    <td class="applicability-cell"
+                                        th:class="${bug.sales == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
+                                        th:text="${bug.sales == 'APPLICABLE' ? 'Y' : bug.sales == 'NOT_APPLICABLE' ? 'N' : ''}">N</td>
+                                    <td th:text="${bug.remarks}">Fixed in version 2.1.0</td>
+                                    <td class="actions">
+                                        <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="action-btn edit-btn">Edit</a>
+                                        <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="action-btn delete-btn"
+                                           onclick="return confirm('Delete this bug?');">Delete</a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(resolvedBugs)}">
+                                    <td colspan="13" class="empty-state">
+                                        <div class="empty-icon">✅</div>
+                                        <div>No resolved bugs</div>
+                                        <small>Completed issues will appear here</small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // Chart Data - Enhanced data handling with null checks
+        var chartData = /*[[${chartData}]]*/ {
+            stageData: {
+                inDev: { 
+                    admin: {S1: 2, S2: 1, S3: 1, P1: 1, P2: 2, P3: 1}, 
+                    newUser: {S1: 1, S2: 0, S3: 2, P1: 0, P2: 1, P3: 2}, 
+                    sales: {S1: 0, S2: 1, S3: 1, P1: 1, P2: 0, P3: 1}, 
+                    partner: {S1: 1, S2: 1, S3: 0, P1: 0, P2: 1, P3: 1} 
                 },
-                priority: {
-                    P1: { bg: 'rgba(111, 66, 193, 0.8)', border: 'rgba(111, 66, 193, 1)' },    // Purple
-                    P2: { bg: 'rgba(13, 110, 253, 0.8)', border: 'rgba(13, 110, 253, 1)' },    // Blue
-                    P3: { bg: 'rgba(32, 201, 151, 0.8)', border: 'rgba(32, 201, 151, 1)' }     // Teal
+                inQA: { 
+                    admin: {S1: 1, S2: 1, S3: 0, P1: 1, P2: 1, P3: 0}, 
+                    newUser: {S1: 0, S2: 1, S3: 1, P1: 0, P2: 0, P3: 2}, 
+                    sales: {S1: 1, S2: 0, S3: 1, P1: 1, P2: 1, P3: 0}, 
+                    partner: {S1: 0, S2: 1, S3: 1, P1: 0, P2: 1, P3: 1} 
+                },
+                resolved: { 
+                    admin: {S1: 5, S2: 3, S3: 2, P1: 3, P2: 4, P3: 3}, 
+                    newUser: {S1: 2, S2: 2, S3: 4, P1: 1, P2: 3, P3: 4}, 
+                    sales: {S1: 1, S2: 2, S3: 3, P1: 2, P2: 2, P3: 2}, 
+                    partner: {S1: 2, S2: 1, S3: 2, P1: 1, P2: 2, P3: 2} 
                 }
-            };
+            }
+        };
 
-            // Data normalization with fallbacks
-            function normalizeData(data) {
+        // Theme Management
+        class ThemeManager {
+            constructor() {
+                this.currentTheme = this.getStoredTheme() || 'light';
+                this.init();
+            }
+            getStoredTheme() {
+                try { return localStorage.getItem('theme'); } catch (e) { return null; }
+            }
+            setStoredTheme(theme) {
+                try { localStorage.setItem('theme', theme); } catch (e) { console.log('Theme set to:', theme); }
+            }
+            init() {
+                this.applyTheme(this.currentTheme);
+                this.setupEventListeners();
+            }
+            setupEventListeners() {
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const theme = e.target.dataset.theme;
+                        this.switchTheme(theme);
+                    });
+                });
+                document.querySelectorAll('.theme-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        const theme = e.currentTarget.dataset.theme;
+                        this.switchTheme(theme);
+                    });
+                });
+            }
+            switchTheme(theme) {
+                this.currentTheme = theme;
+                this.applyTheme(theme);
+                this.setStoredTheme(theme);
+            }
+            applyTheme(theme) {
+                document.body.dataset.theme = theme;
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.theme === theme);
+                });
+                document.querySelectorAll('.theme-option').forEach(option => {
+                    option.classList.toggle('active', option.dataset.theme === theme);
+                });
+            }
+        }
+
+        // Settings Panel Management
+        class SettingsManager {
+            constructor() {
+                this.overlay = document.getElementById('settingsOverlay');
+                this.settingsLink = document.getElementById('settingsLink');
+                this.closeBtn = document.getElementById('closeSettings');
+                this.init();
+            }
+            init() { this.setupEventListeners(); }
+            setupEventListeners() {
+                this.settingsLink?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.openSettings();
+                });
+                this.closeBtn?.addEventListener('click', () => this.closeSettings());
+                this.overlay?.addEventListener('click', (e) => {
+                    if (e.target === this.overlay) this.closeSettings();
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.classList.contains('active')) {
+                        this.closeSettings();
+                    }
+                });
+            }
+            openSettings() {
+                this.overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            closeSettings() {
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Chart Management
+        class ChartManager {
+            constructor(chartData) {
+                this.chartData = chartData;
+                this.charts = {};
+                this.init();
+            }
+            init() {
+                this.setupChartColors();
+                this.initializeCharts();
+            }
+            setupChartColors() {
+                this.chartColors = {
+                    severity: {
+                        S1: { bg: 'rgba(220, 53, 69, 0.8)', border: 'rgba(220, 53, 69, 1)' },
+                        S2: { bg: 'rgba(253, 126, 20, 0.8)', border: 'rgba(253, 126, 20, 1)' },
+                        S3: { bg: 'rgba(255, 193, 7, 0.8)', border: 'rgba(255, 193, 7, 1)' }
+                    },
+                    priority: {
+                        P1: { bg: 'rgba(111, 66, 193, 0.8)', border: 'rgba(111, 66, 193, 1)' },
+                        P2: { bg: 'rgba(13, 110, 253, 0.8)', border: 'rgba(13, 110, 253, 1)' },
+                        P3: { bg: 'rgba(32, 201, 151, 0.8)', border: 'rgba(32, 201, 151, 1)' }
+                    }
+                };
+            }
+            normalizeData(data) {
                 if (!data) return null;
-                
                 const defaultValues = {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
                 const users = ['admin', 'newUser', 'sales', 'partner'];
-                
                 users.forEach(user => {
                     if (!data[user]) {
                         data[user] = {...defaultValues};
@@ -222,453 +901,130 @@
                         });
                     }
                 });
-                
                 return data;
             }
-
-            // Function to combine Dev + QA data for Total Live Issues
-            function combineLiveData(devData, qaData) {
+            combineLiveData(devData, qaData) {
                 if (!devData && !qaData) return null;
-                
                 const defaultValues = {S1: 0, S2: 0, S3: 0, P1: 0, P2: 0, P3: 0};
                 const users = ['admin', 'newUser', 'sales', 'partner'];
                 const combinedData = {};
-                
                 users.forEach(user => {
                     combinedData[user] = {...defaultValues};
-                    
-                    // Add Dev data
                     if (devData && devData[user]) {
                         Object.keys(defaultValues).forEach(key => {
                             combinedData[user][key] += devData[user][key] || 0;
                         });
                     }
-                    
-                    // Add QA data
                     if (qaData && qaData[user]) {
                         Object.keys(defaultValues).forEach(key => {
                             combinedData[user][key] += qaData[user][key] || 0;
                         });
                     }
                 });
-                
                 return combinedData;
             }
-
-            // Create stacked datasets - S1+S2+S3 in one stack, P1+P2+P3 in another stack
-            function createCombinedDatasets(data) {
+            createCombinedDatasets(data) {
                 if (!data) return [];
-                
                 return [
-                    // Severity Stack - S1 (bottom layer)
-                    {
-                        label: 'S1 (Critical)',
-                        data: [data.admin?.S1||0, data.newUser?.S1||0, data.sales?.S1||0, data.partner?.S1||0],
-                        backgroundColor: chartColors.severity.S1.bg,
-                        borderColor: chartColors.severity.S1.border,
-                        borderWidth: 1,
-                        stack: 'severity'
-                    },
-                    // Severity Stack - S2 (middle layer)
-                    {
-                        label: 'S2 (Major)',
-                        data: [data.admin?.S2||0, data.newUser?.S2||0, data.sales?.S2||0, data.partner?.S2||0],
-                        backgroundColor: chartColors.severity.S2.bg,
-                        borderColor: chartColors.severity.S2.border,
-                        borderWidth: 1,
-                        stack: 'severity'
-                    },
-                    // Severity Stack - S3 (top layer)
-                    {
-                        label: 'S3 (Minor)',
-                        data: [data.admin?.S3||0, data.newUser?.S3||0, data.sales?.S3||0, data.partner?.S3||0],
-                        backgroundColor: chartColors.severity.S3.bg,
-                        borderColor: chartColors.severity.S3.border,
-                        borderWidth: 1,
-                        stack: 'severity'
-                    },
-                    // Priority Stack - P1 (bottom layer)
-                    {
-                        label: 'P1 (Critical)',
-                        data: [data.admin?.P1||0, data.newUser?.P1||0, data.sales?.P1||0, data.partner?.P1||0],
-                        backgroundColor: chartColors.priority.P1.bg,
-                        borderColor: chartColors.priority.P1.border,
-                        borderWidth: 1,
-                        stack: 'priority'
-                    },
-                    // Priority Stack - P2 (middle layer)
-                    {
-                        label: 'P2 (High)',
-                        data: [data.admin?.P2||0, data.newUser?.P2||0, data.sales?.P2||0, data.partner?.P2||0],
-                        backgroundColor: chartColors.priority.P2.bg,
-                        borderColor: chartColors.priority.P2.border,
-                        borderWidth: 1,
-                        stack: 'priority'
-                    },
-                    // Priority Stack - P3 (top layer)
-                    {
-                        label: 'P3 (Medium)',
-                        data: [data.admin?.P3||0, data.newUser?.P3||0, data.sales?.P3||0, data.partner?.P3||0],
-                        backgroundColor: chartColors.priority.P3.bg,
-                        borderColor: chartColors.priority.P3.border,
-                        borderWidth: 1,
-                        stack: 'priority'
-                    }
+                    { label: 'S1 (Critical)', data: [data.admin?.S1||0, data.newUser?.S1||0, data.sales?.S1||0, data.partner?.S1||0], backgroundColor: this.chartColors.severity.S1.bg, borderColor: this.chartColors.severity.S1.border, borderWidth: 1, stack: 'severity' },
+                    { label: 'S2 (Major)',    data: [data.admin?.S2||0, data.newUser?.S2||0, data.sales?.S2||0, data.partner?.S2||0], backgroundColor: this.chartColors.severity.S2.bg, borderColor: this.chartColors.severity.S2.border, borderWidth: 1, stack: 'severity' },
+                    { label: 'S3 (Minor)',    data: [data.admin?.S3||0, data.newUser?.S3||0, data.sales?.S3||0, data.partner?.S3||0], backgroundColor: this.chartColors.severity.S3.bg, borderColor: this.chartColors.severity.S3.border, borderWidth: 1, stack: 'severity' },
+                    { label: 'P1 (Critical)', data: [data.admin?.P1||0, data.newUser?.P1||0, data.sales?.P1||0, data.partner?.P1||0], backgroundColor: this.chartColors.priority.P1.bg,  borderColor: this.chartColors.priority.P1.border,  borderWidth: 1, stack: 'priority' },
+                    { label: 'P2 (High)',     data: [data.admin?.P2||0, data.newUser?.P2||0, data.sales?.P2||0, data.partner?.P2||0], backgroundColor: this.chartColors.priority.P2.bg,  borderColor: this.chartColors.priority.P2.border,  borderWidth: 1, stack: 'priority' },
+                    { label: 'P3 (Medium)',   data: [data.admin?.P3||0, data.newUser?.P3||0, data.sales?.P3||0, data.partner?.P3||0], backgroundColor: this.chartColors.priority.P3.bg,  borderColor: this.chartColors.priority.P3.border,  borderWidth: 1, stack: 'priority' }
                 ];
             }
+            initializeCharts() {
+                const inDev = this.normalizeData(this.chartData?.stageData?.inDev);
+                const inQA = this.normalizeData(this.chartData?.stageData?.inQA);
+                const resolved = this.normalizeData(this.chartData?.stageData?.resolved);
+                const totalLive = this.combineLiveData(inDev, inQA);
 
-            // Chart initialization with error handling
-            function initChart(canvasId, rawData, title) {
+                this.initChart('inDevChart', inDev, 'In Development');
+                this.initChart('inQAChart', inQA, 'In QA');
+                this.initChart('resolvedChart', resolved, 'Resolved');
+                this.initChart('totalLiveChart', totalLive, 'Total Live Issues');
+            }
+            initChart(canvasId, rawData, title) {
                 const canvas = document.getElementById(canvasId);
-                if (!canvas) {
-                    console.error(`Canvas not found: ${canvasId}`);
-                    return;
-                }
-                
-                // Clear previous instance
-                if (window[`${canvasId}Instance`]) {
-                    window[`${canvasId}Instance`].destroy();
-                }
-                
+                if (!canvas) return;
+                if (this.charts[canvasId]) this.charts[canvasId].destroy();
+
                 const container = canvas.parentNode;
-                const normalizedData = normalizeData(rawData);
-                
+                const normalizedData = this.normalizeData(rawData);
                 if (!normalizedData) {
                     container.innerHTML = `
                         <div class="no-data-message">
-                            📊 No data available
-                            <br><small style="margin-top:10px;display:block;">Add bugs to see stacked severity & priority</small>
-                        </div>
-                    `;
+                            <div class="no-data-icon">📊</div>
+                            <div>No data available</div>
+                            <small>Add bugs to see analytics</small>
+                        </div>`;
                     return;
                 }
-                
-                // Check if there's any data to display
-                const datasets = createCombinedDatasets(normalizedData);
-                const hasData = datasets.some(dataset => 
-                    dataset.data.some(value => value > 0)
-                );
-                
+
+                const datasets = this.createCombinedDatasets(normalizedData);
+                const hasData = datasets.some(ds => ds.data.some(v => v > 0));
                 if (!hasData) {
                     container.innerHTML = `
                         <div class="no-data-message">
-                            📊 No issues found
-                            <br><small style="margin-top:10px;display:block;">This stage has no bugs to display</small>
-                        </div>
-                    `;
+                            <div class="no-data-icon">📊</div>
+                            <div>No issues found</div>
+                            <small>This stage has no bugs to display</small>
+                        </div>`;
                     return;
                 }
-                
+
                 try {
-                    window[`${canvasId}Instance`] = new Chart(canvas.getContext('2d'), {
+                    this.charts[canvasId] = new Chart(canvas.getContext('2d'), {
                         type: 'bar',
-                        data: {
-                            labels: ['Admin', 'New User', 'Sales', 'Partner'],
-                            datasets: datasets
-                        },
+                        data: { labels: ['Admin', 'New User', 'Sales', 'Partner'], datasets },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
-                                title: {
-                                    display: true,
-                                    text: title,
-                                    font: { size: 14, weight: 'bold' },
-                                    padding: { bottom: 20 }
-                                },
                                 legend: {
                                     position: 'bottom',
-                                    labels: { 
-                                        padding: 15,
-                                        usePointStyle: true,
-                                        pointStyle: 'rect',
-                                        font: { size: 11 }
-                                    }
+                                    labels: { padding: 15, usePointStyle: true, pointStyle: 'rect', font: { size: 11 } }
                                 },
                                 tooltip: {
                                     callbacks: {
-                                        title: function(context) {
-                                            return context[0].label + ' User Type';
-                                        },
-                                        afterBody: function(context) {
-                                            const userIndex = context.dataIndex;
-                                            const users = ['admin', 'newUser', 'sales', 'partner'];
-                                            const userData = normalizedData[users[userIndex]];
-                                            
-                                            if (!userData) return '';
-                                            
-                                            const severityTotal = (userData.S1 || 0) + (userData.S2 || 0) + (userData.S3 || 0);
-                                            const priorityTotal = (userData.P1 || 0) + (userData.P2 || 0) + (userData.P3 || 0);
-                                            
+                                        title: function(context) { return context[0].label + ' User Type'; },
+                                        afterBody: (context) => {
+                                            const userIndex = context[0].dataIndex;
+                                            const users = ['admin','newUser','sales','partner'];
+                                            const key = users[userIndex];
+                                            const d = normalizedData[key] || {};
                                             return [
-                                                '',
-                                                '--- Severity Stack ---',
-                                                `S1 (Critical): ${userData.S1 || 0}`,
-                                                `S2 (Major): ${userData.S2 || 0}`,
-                                                `S3 (Minor): ${userData.S3 || 0}`,
-                                                `Total Severity: ${severityTotal}`,
-                                                '',
-                                                '--- Priority Stack ---',
-                                                `P1 (Critical): ${userData.P1 || 0}`,
-                                                `P2 (High): ${userData.P2 || 0}`,
-                                                `P3 (Medium): ${userData.P3 || 0}`,
-                                                `Total Priority: ${priorityTotal}`
+                                                `Severity: S1 ${d.S1||0}, S2 ${d.S2||0}, S3 ${d.S3||0}`,
+                                                `Priority: P1 ${d.P1||0}, P2 ${d.P2||0}, P3 ${d.P3||0}`
                                             ];
                                         }
                                     }
                                 }
                             },
                             scales: {
-                                y: { 
-                                    beginAtZero: true,
-                                    stacked: true,
-                                    ticks: {
-                                        stepSize: 1,
-                                        precision: 0
-                                    },
-                                    title: {
-                                        display: true,
-                                        text: 'Number of Issues'
-                                    }
-                                },
-                                x: {
-                                    stacked: true,
-                                    title: {
-                                        display: true,
-                                        text: 'User Types'
-                                    }
-                                }
-                            },
-                            interaction: {
-                                intersect: false,
-                                mode: 'index'
+                                x: { stacked: true, ticks: { font: { size: 12 } } },
+                                y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, precision: 0 } }
                             }
                         }
                     });
-                } catch (error) {
-                    console.error(`Chart error for ${canvasId}:`, error);
+                } catch (err) {
+                    console.error('Chart init error:', err);
                     container.innerHTML = `
-                        <div class="no-data-message" style="color:#dc3545">
-                            ⚠️ Chart rendering failed
-                            <br><small style="margin-top:10px;display:block;">Error: ${error.message}</small>
-                        </div>
-                    `;
+                        <div class="no-data-message">
+                            <div class="no-data-icon">⚠️</div>
+                            <div>Failed to render chart</div>
+                            <small>Please check console for details</small>
+                        </div>`;
                 }
             }
+        }
 
-            // Main initialization
-            document.addEventListener('DOMContentLoaded', function() {
-                try {
-                    // Create Total Live Issues chart (Dev + QA combined)
-                    if (chartData?.stageData) {
-                        const liveData = combineLiveData(
-                            chartData.stageData.inDev, 
-                            chartData.stageData.inQA
-                        );
-                        initChart('totalLiveChart', liveData, 'Total Live Issues (Dev + QA Combined) - By User Type');
-                    } else {
-                        const el = document.getElementById('totalLiveChart');
-                        if (el) {
-                            el.parentNode.innerHTML = `
-                                <div class="no-data-message">
-                                    📊 No live issues data available
-                                    <br><small style="margin-top:10px;display:block;">Add bugs in Dev or QA to see the chart</small>
-                                </div>
-                            `;
-                        }
-                    }
-                    
-                    // Initialize stage charts
-                    if (chartData?.stageData) {
-                        initChart('inDevChart', chartData.stageData.inDev, 'In Development - Stacked Distribution');
-                        initChart('inQAChart', chartData.stageData.inQA, 'In QA - Stacked Distribution');
-                        initChart('resolvedChart', chartData.stageData.resolved, 'Resolved - Stacked Distribution');
-                    } else {
-                        ['inDevChart', 'inQAChart', 'resolvedChart'].forEach(id => {
-                            const el = document.getElementById(id);
-                            if (el) {
-                                el.parentNode.innerHTML = `
-                                    <div class="no-data-message">
-                                        📊 No stage data available
-                                        <br><small style="margin-top:10px;display:block;">Check your data source</small>
-                                    </div>
-                                `;
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error("Initialization failed:", error);
-                    document.getElementById('debugInfo').innerHTML += 
-                        `<br><strong style="color:#dc3545">Error: ${error.message}</strong>`;
-                }
-            });
-            /*]]>*/
-        </script>
-
-        <hr style="margin: 40px 0;"/>
-
-        <!-- Section: In Dev -->
-        <h2>🔧 In Development (<span th:text="${#lists.size(inDevBugs)}">0</span>)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Project</th>
-                    <th>Bug #</th>
-                    <th>Issue</th>
-                    <th>Severity</th>
-                    <th>Priority</th>
-                    <th>New User</th>
-                    <th>Partner</th>
-                    <th>Admin</th>
-                    <th>Sales</th>
-                    <th>Remarks</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="bug : ${inDevBugs}">
-                    <td th:text="${bug.id}">1</td>
-                    <td th:text="${bug.project}">Project</td>
-                    <td th:text="${bug.bugNumber}">BUG-001</td>
-                    <td th:text="${bug.issue}">Issue</td>
-                    <td th:text="${bug.severity}" 
-                        th:class="${'severity-' + bug.severity.name().toLowerCase()}">S1</td>
-                    <td th:text="${bug.priority}"
-                        th:class="${'priority-' + bug.priority.name().toLowerCase()}">P1</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.newUser == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.newUser == 'APPLICABLE' ? 'Y' : bug.newUser == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.partner == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.partner == 'APPLICABLE' ? 'Y' : bug.partner == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.admin == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.admin == 'APPLICABLE' ? 'Y' : bug.admin == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.sales == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.sales == 'APPLICABLE' ? 'Y' : bug.sales == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td th:text="${bug.remarks}">Notes</td>
-                    <td class="actions">
-                        <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
-                        <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
-                           onclick="return confirm('Delete this bug?');">Delete</a>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(inDevBugs)}">
-                    <td colspan="12" style="text-align: center; color: #666; font-style: italic;">No bugs in development.</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Section: In QA -->
-        <h2>🔍 In QA (<span th:text="${#lists.size(inQaBugs)}">0</span>)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Project</th>
-                    <th>Bug #</th>
-                    <th>Issue</th>
-                    <th>Severity</th>
-                    <th>Priority</th>
-                    <th>New User</th>
-                    <th>Partner</th>
-                    <th>Admin</th>
-                    <th>Sales</th>
-                    <th>Remarks</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="bug : ${inQaBugs}">
-                    <td th:text="${bug.id}">1</td>
-                    <td th:text="${bug.project}">Project</td>
-                    <td th:text="${bug.bugNumber}">BUG-002</td>
-                    <td th:text="${bug.issue}">Issue</td>
-                    <td th:text="${bug.severity}"
-                        th:class="${'severity-' + bug.severity.name().toLowerCase()}">S2</td>
-                    <td th:text="${bug.priority}"
-                        th:class="${'priority-' + bug.priority.name().toLowerCase()}">P2</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.newUser == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.newUser == 'APPLICABLE' ? 'Y' : bug.newUser == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.partner == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.partner == 'APPLICABLE' ? 'Y' : bug.partner == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.admin == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.admin == 'APPLICABLE' ? 'Y' : bug.admin == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.sales == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.sales == 'APPLICABLE' ? 'Y' : bug.sales == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td th:text="${bug.remarks}">Notes</td>
-                    <td class="actions">
-                        <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
-                        <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
-                           onclick="return confirm('Delete this bug?');">Delete</a>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(inQaBugs)}">
-                    <td colspan="12" style="text-align: center; color: #666; font-style: italic;">No bugs in QA.</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Section: Resolved -->
-        <h2>✅ Resolved (<span th:text="${#lists.size(resolvedBugs)}">0</span>)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Project</th>
-                    <th>Bug #</th>
-                    <th>Issue</th>
-                    <th>Severity</th>
-                    <th>Priority</th>
-                    <th>New User</th>
-                    <th>Partner</th>
-                    <th>Admin</th>
-                    <th>Sales</th>
-                    <th>Remarks</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="bug : ${resolvedBugs}">
-                    <td th:text="${bug.id}">1</td>
-                    <td th:text="${bug.project}">Project</td>
-                    <td th:text="${bug.bugNumber}">BUG-003</td>
-                    <td th:text="${bug.issue}">Issue</td>
-                    <td th:text="${bug.severity}"
-                        th:class="${'severity-' + bug.severity.name().toLowerCase()}">S3</td>
-                    <td th:text="${bug.priority}"
-                        th:class="${'priority-' + bug.priority.name().toLowerCase()}">P3</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.newUser == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.newUser == 'APPLICABLE' ? 'Y' : bug.newUser == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.partner == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.partner == 'APPLICABLE' ? 'Y' : bug.partner == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.admin == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.admin == 'APPLICABLE' ? 'Y' : bug.admin == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td class="applicability-cell" 
-                        th:class="${bug.sales == 'APPLICABLE' ? 'applicable' : 'not-applicable'}"
-                        th:text="${bug.sales == 'APPLICABLE' ? 'Y' : bug.sales == 'NOT_APPLICABLE' ? 'N' : ''}">-</td>
-                    <td th:text="${bug.remarks}">Notes</td>
-                    <td class="actions">
-                        <a th:href="@{'/bugs/edit/' + ${bug.id}}" class="edit-btn">Edit</a>
-                        <a th:href="@{'/bugs/delete/' + ${bug.id}}" class="delete-btn"
-                           onclick="return confirm('Delete this bug?');">Delete</a>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(resolvedBugs)}">
-                    <td colspan="12" style="text-align: center; color: #666; font-style: italic;">No resolved bugs.</td>
-                </tr>
-            </tbody>
-        </table>
-
-    </div>
+        // Initialize
+        new ThemeManager();
+        new SettingsManager();
+        new ChartManager(chartData);
+        /*]]>*/
+    </script>
 </body>
 </html>
